@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox minHeight="580.0" minWidth="640.0" prefHeight="620.0" prefWidth="720.0"
+      spacing="8.0" xmlns="http://javafx.com/javafx/23.0.1"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.sojourners.chess.controller.BookBatchController">
+    <padding>
+        <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+    </padding>
+    <children>
+        <Label styleClass="dialog-title" text="批量制作 XQB v1 开局库" />
+        <Label maxWidth="1.7976931348623157E308" text="合并多个本地 XQB v1 棋库，只删除所有字段完全相同的记录。源文件始终只读；失败或取消不会覆盖原输出文件。" wrapText="true" />
+
+        <Label labelFor="$sourceList" mnemonicParsing="true" text="_源文件（可多选）" />
+        <ListView fx:id="sourceList" accessibleHelp="列出将要合并的 XQB v1 源棋库。" accessibleText="XQB 源文件列表" minHeight="120.0" VBox.vgrow="ALWAYS" />
+        <HBox spacing="8.0">
+            <children>
+                <Button fx:id="addSourceButton" mnemonicParsing="true" onAction="#addSourceButtonClick" text="_添加文件" />
+                <Button fx:id="removeSourceButton" mnemonicParsing="true" onAction="#removeSourceButtonClick" text="_移除所选" />
+            </children>
+        </HBox>
+
+        <Label labelFor="$destinationField" mnemonicParsing="true" text="_输出文件" />
+        <HBox spacing="8.0">
+            <children>
+                <TextField fx:id="destinationField" accessibleHelp="新的 XQB v1 输出文件路径。" accessibleText="XQB 输出文件" editable="false" promptText="请选择新的 .xqb 输出文件" HBox.hgrow="ALWAYS" />
+                <Button fx:id="destinationButton" mnemonicParsing="true" onAction="#destinationButtonClick" text="选择_输出" />
+                <Button fx:id="discardCheckpointButton" accessibleHelp="删除当前输出文件对应的 PikaDesk 恢复数据，不删除源文件或已有输出文件。" disable="true" mnemonicParsing="true" onAction="#discardCheckpointButtonClick" text="清除断_点" />
+            </children>
+        </HBox>
+
+        <Separator />
+        <ProgressBar fx:id="progressBar" accessibleText="批处理进度" maxWidth="1.7976931348623157E308" minHeight="8.0" prefHeight="8.0" progress="0.0" />
+        <Label fx:id="statusLabel" accessibleText="批处理当前状态" maxWidth="1.7976931348623157E308" text="请添加源文件并选择输出文件。" wrapText="true" />
+        <Label labelFor="$issuesArea" mnemonicParsing="true" text="校验_报告" />
+        <TextArea fx:id="issuesArea" accessibleText="批处理校验报告" editable="false" minHeight="80.0" prefRowCount="6" wrapText="true" />
+
+        <HBox alignment="CENTER_RIGHT" spacing="8.0">
+            <children>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button fx:id="startButton" defaultButton="true" disable="true" mnemonicParsing="true" onAction="#startButtonClick" text="_开始制作" />
+                <Button fx:id="cancelButton" disable="true" mnemonicParsing="true" onAction="#cancelButtonClick" text="_取消" />
+                <Button cancelButton="true" mnemonicParsing="true" onAction="#closeButtonClick" text="_关闭" />
+            </children>
+        </HBox>
+    </children>
+</VBox>

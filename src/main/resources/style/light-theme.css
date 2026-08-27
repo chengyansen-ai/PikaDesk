@@ -1,0 +1,21 @@
+.light-theme {
+    -tchess-tree-even: #f5f7fa;
+    -tchess-tree-odd: #ffffff;
+}
+
+.dialog-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+.light-theme .manual-info-pane {
+    -fx-background-color: #f4f4f4;
+}
+
+.light-theme .positive-score {
+    -fx-text-fill: blue;
+}
+
+.light-theme .negative-score {
+    -fx-text-fill: red;
+}

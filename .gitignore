@@ -1,0 +1,23 @@
+# Maven and Java build output
+target/
+*.class
+
+# Local developer tools and runtime downloads
+.tools/
+.jdks/
+
+# IDE and operating-system state
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local logs, crash dumps, and secrets
+*.log
+hs_err_pid*.log
+replay_pid*.log
+.env
+.env.*
+*.key
+*.pem

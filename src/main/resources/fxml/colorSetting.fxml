@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane prefHeight="350.0" prefWidth="650.0" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sojourners.chess.controller.ColorSettingController">
+    <center>
+        <VBox maxHeight="-Infinity" minHeight="-Infinity" prefHeight="282.0" prefWidth="650.0" spacing="14.0" BorderPane.alignment="CENTER">
+            <padding>
+                <Insets bottom="12.0" left="18.0" right="18.0" top="16.0" />
+            </padding>
+            <Label text="棋步与分支箭头">
+                <font>
+                    <Font size="15.0" />
+                </font>
+            </Label>
+            <GridPane hgap="12.0" vgap="10.0">
+                <columnConstraints>
+                    <ColumnConstraints halignment="RIGHT" minWidth="90.0" />
+                    <ColumnConstraints halignment="CENTER" minWidth="125.0" />
+                    <ColumnConstraints halignment="CENTER" minWidth="100.0" />
+                    <ColumnConstraints halignment="CENTER" minWidth="125.0" />
+                    <ColumnConstraints halignment="CENTER" minWidth="90.0" />
+                </columnConstraints>
+                <Label text="类型" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                <Label text="箭头颜色" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                <Label text="透明度 (%)" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                <Label text="数字颜色" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+
+                <Label text="棋步提示1" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                <ColorPicker fx:id="firstStepColor" prefWidth="120.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                <Spinner fx:id="firstStepOpacity" editable="true" prefWidth="90.0" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                <ColorPicker fx:id="firstStepNumberColor" prefWidth="120.0" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                <Button mnemonicParsing="false" onAction="#resetFirstStep" text="恢复默认" GridPane.columnIndex="4" GridPane.rowIndex="1" />
+
+                <Label text="棋步提示2" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                <ColorPicker fx:id="secondStepColor" prefWidth="120.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                <Spinner fx:id="secondStepOpacity" editable="true" prefWidth="90.0" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                <ColorPicker fx:id="secondStepNumberColor" prefWidth="120.0" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+                <Button mnemonicParsing="false" onAction="#resetSecondStep" text="恢复默认" GridPane.columnIndex="4" GridPane.rowIndex="2" />
+
+                <Label text="变招分支" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                <ColorPicker fx:id="branchStepColor" prefWidth="120.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                <Spinner fx:id="branchStepOpacity" editable="true" prefWidth="90.0" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                <ColorPicker fx:id="branchStepNumberColor" prefWidth="120.0" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+                <Button mnemonicParsing="false" onAction="#resetBranchStep" text="恢复默认" GridPane.columnIndex="4" GridPane.rowIndex="3" />
+                <rowConstraints>
+                    <RowConstraints />
+                    <RowConstraints />
+                    <RowConstraints />
+                    <RowConstraints />
+                </rowConstraints>
+            </GridPane>
+            <Separator />
+            <Label text="程序颜色主题">
+                <font>
+                    <Font size="15.0" />
+                </font>
+            </Label>
+            <GridPane hgap="12.0" maxHeight="-Infinity" minHeight="-Infinity" prefHeight="24.0" vgap="10.0">
+                <columnConstraints>
+                    <ColumnConstraints halignment="RIGHT" minWidth="90.0" />
+                    <ColumnConstraints halignment="CENTER" minWidth="125.0" />
+                    <ColumnConstraints halignment="CENTER" minWidth="100.0" />
+                    <ColumnConstraints halignment="CENTER" minWidth="125.0" />
+                    <ColumnConstraints halignment="CENTER" minWidth="90.0" />
+                </columnConstraints>
+                <RadioButton fx:id="lightTheme" mnemonicParsing="false" text="浅色" GridPane.columnIndex="1">
+                    <toggleGroup>
+                        <ToggleGroup fx:id="themeGroup" />
+                    </toggleGroup>
+                </RadioButton>
+                <RadioButton fx:id="darkTheme" mnemonicParsing="false" text="深色" toggleGroup="$themeGroup" GridPane.columnIndex="2" />
+                <Button mnemonicParsing="false" onAction="#resetTheme" text="恢复默认" GridPane.columnIndex="4" />
+                <rowConstraints>
+                    <RowConstraints />
+                </rowConstraints>
+            </GridPane>
+        </VBox>
+    </center>
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" spacing="10.0" BorderPane.alignment="CENTER">
+            <padding>
+                <Insets bottom="14.0" left="18.0" right="18.0" top="8.0" />
+            </padding>
+            <Button fx:id="saveButton" defaultButton="true" mnemonicParsing="false" onAction="#save" prefWidth="78.0" text="保存" />
+            <Button cancelButton="true" mnemonicParsing="false" onAction="#cancel" prefWidth="78.0" text="取消" />
+        </HBox>
+    </bottom>
+</BorderPane>

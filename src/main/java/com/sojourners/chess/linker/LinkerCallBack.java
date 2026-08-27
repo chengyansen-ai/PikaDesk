@@ -1,0 +1,27 @@
+package com.sojourners.chess.linker;
+
+import com.sojourners.chess.linker.profile.ConnectionProfile;
+import com.sojourners.chess.linker.profile.ConnectionWizardState;
+
+public interface LinkerCallBack {
+
+    void linkerInitChessBoard(String fenCode, boolean isReverse);
+
+    char[][] getEngineBoard();
+
+    boolean isThinking();
+
+    boolean isWatchMode();
+
+    void linkerMove(int x1, int y1, int x2, int y2);
+
+    /**
+     * Requests explicit approval for one selected local window. Returning
+     * {@code null} means cancel; callers must remain unarmed.
+     */
+    default ConnectionProfile configureConnection(ConnectionWizardState wizard) {
+        return null;
+    }
+
+    default void connectionConfigurationFailed(String message) { }
+}

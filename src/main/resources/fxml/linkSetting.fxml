@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox prefHeight="690.0" prefWidth="700.0" spacing="14.0"
+      xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.sojourners.chess.controller.LinkSettingController">
+   <padding><Insets bottom="18.0" left="22.0" right="22.0" top="18.0" /></padding>
+   <children>
+      <Label text="本地棋盘连接向导" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
+      <Label fx:id="stepLabel" text="1/5 选择窗口" style="-fx-font-size: 14px; -fx-font-weight: bold;" />
+      <Label text="只支持本地、离线或明确授权的棋盘。完成校准和干运行前，底层不会武装自动点击。"
+             wrapText="true" />
+      <Label text="识别兼容性：当前仅开放已在本地测试棋盘完成实机验证的 CLASSIC + yolo11-xiangqi 组合。"
+             wrapText="true" />
+
+      <TitledPane text="1 · 目标窗口" expanded="true" collapsible="false">
+         <content>
+            <GridPane hgap="10.0" vgap="8.0">
+               <padding><Insets bottom="10.0" left="12.0" right="12.0" top="10.0" /></padding>
+               <children>
+                  <Label text="配置名称" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                  <TextField fx:id="profileName" text="本地棋盘" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                  <Label text="当前目标" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                  <Label fx:id="targetLabel" text="未选择目标窗口" wrapText="true"
+                         GridPane.columnIndex="1" GridPane.rowIndex="1" />
+               </children>
+               <columnConstraints>
+                  <ColumnConstraints minWidth="80.0" />
+                  <ColumnConstraints hgrow="ALWAYS" />
+               </columnConstraints>
+            </GridPane>
+         </content>
+      </TitledPane>
+
+      <TitledPane text="2 · 棋盘边界与显示" expanded="true" collapsible="false">
+         <content>
+            <GridPane hgap="10.0" vgap="9.0">
+               <padding><Insets bottom="10.0" left="12.0" right="12.0" top="10.0" /></padding>
+               <children>
+                  <Label text="棋盘 X" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                  <TextField fx:id="boardX" promptText="自动识别" prefWidth="85.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                  <Label text="棋盘 Y" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                  <TextField fx:id="boardY" promptText="自动识别" prefWidth="85.0" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+                  <Label text="宽度" GridPane.columnIndex="4" GridPane.rowIndex="0" />
+                  <TextField fx:id="boardWidth" promptText="像素" prefWidth="85.0" GridPane.columnIndex="5" GridPane.rowIndex="0" />
+                  <Label text="高度" GridPane.columnIndex="6" GridPane.rowIndex="0" />
+                  <TextField fx:id="boardHeight" promptText="像素" prefWidth="85.0" GridPane.columnIndex="7" GridPane.rowIndex="0" />
+                  <Label text="方向" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                  <ComboBox fx:id="orientation" prefWidth="130.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="1" />
+                  <Label text="主题" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                  <ComboBox fx:id="themeId" prefWidth="120.0" GridPane.columnIndex="4" GridPane.columnSpan="2" GridPane.rowIndex="1" />
+               </children>
+            </GridPane>
+         </content>
+      </TitledPane>
+
+      <TitledPane text="3 · 识别模型与时序" expanded="true" collapsible="false">
+         <content>
+            <GridPane hgap="10.0" vgap="9.0">
+               <padding><Insets bottom="10.0" left="12.0" right="12.0" top="10.0" /></padding>
+               <children>
+                  <Label text="模型" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                  <ComboBox fx:id="modelId" prefWidth="180.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="0" />
+                  <Label text="扫描间隔(ms)" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                  <TextField fx:id="linkScanTime" prefWidth="85.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  <Label text="识别线程" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                  <TextField fx:id="linkThreadNum" prefWidth="70.0" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                  <Label text="点击间隔(ms)" GridPane.columnIndex="4" GridPane.rowIndex="1" />
+                  <TextField fx:id="mouseClickDelay" prefWidth="70.0" GridPane.columnIndex="5" GridPane.rowIndex="1" />
+                  <Label text="走子间隔(ms)" GridPane.columnIndex="6" GridPane.rowIndex="1" />
+                  <TextField fx:id="mouseMoveDelay" prefWidth="70.0" GridPane.columnIndex="7" GridPane.rowIndex="1" />
+               </children>
+            </GridPane>
+         </content>
+      </TitledPane>
+
+      <TitledPane text="4-5 · 干运行与授权" expanded="true" collapsible="false" VBox.vgrow="ALWAYS">
+         <content>
+            <VBox spacing="10.0">
+               <padding><Insets bottom="12.0" left="12.0" right="12.0" top="12.0" /></padding>
+               <children>
+                  <Label fx:id="verificationLabel" text="自动点击仍为关闭状态。" wrapText="true" />
+                  <Button fx:id="dryRunButton" text="执行坐标干运行（不点击）" onAction="#dryRunButtonClick" />
+                  <CheckBox fx:id="localAuthorization"
+                            text="我确认目标是本地、离线或我已获得明确授权的棋盘"
+                            wrapText="true" />
+               </children>
+            </VBox>
+         </content>
+      </TitledPane>
+
+      <HBox alignment="CENTER_LEFT" spacing="8.0">
+         <children>
+            <Button text="导入配置" onAction="#importButtonClick" />
+            <Button fx:id="exportRedactedButton" text="导出脱敏配置" onAction="#exportRedactedButtonClick" />
+            <Button fx:id="exportLocalButton" text="导出本机配置" onAction="#exportLocalButtonClick" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Button fx:id="completeButton" text="完成并允许本次连接" defaultButton="true"
+                    disable="true" onAction="#okButtonClick" />
+            <Button text="取消" cancelButton="true" onAction="#cancelButtonClick" />
+         </children>
+      </HBox>
+   </children>
+</VBox>
