@@ -1343,6 +1343,15 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
 
     @Override
     public void showBookResults(List<BookData> list) {
+        List<BookData> snapshot = List.copyOf(list);
+        if (!Platform.isFxApplicationThread()) {
+            Platform.runLater(() -> applyBookResults(snapshot));
+            return;
+        }
+        applyBookResults(snapshot);
+    }
+
+    private void applyBookResults(List<BookData> list) {
         this.bookTable.getItems().clear();
         for (BookData bd : list) {
             String move = bd.getMove();

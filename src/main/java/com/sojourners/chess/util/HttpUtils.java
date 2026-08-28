@@ -148,7 +148,9 @@ public class HttpUtils {
             }
             return result.toString();
         } catch (Exception e) {
-            e.printStackTrace();
+            if (Boolean.getBoolean("pikadesk.http.trace")) {
+                e.printStackTrace();
+            }
             return null;
         }
     }

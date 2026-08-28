@@ -11,7 +11,9 @@ import java.util.List;
 
 public class CloudOpenBook implements OpenBook {
 
-    private final static String URL = "http://www.chessdb.cn/chessdb.php";
+    private static final boolean TRACE_BOOK =
+            Boolean.getBoolean("pikadesk.book.trace");
+    private static final String URL = "https://www.chessdb.cn/chessdb.php";
 
     @Override
     public List<BookData> get(char[][] board, boolean redGo)  {
@@ -24,7 +26,9 @@ public class CloudOpenBook implements OpenBook {
         try {
             String content = "action=queryall&board=" + URLEncoder.encode(fenCode, "UTF-8");
             String result = HttpUtils.sendByGet(URL, content, Properties.getInstance().getCloudBookTimeout());
-            System.out.println(result);
+            if (TRACE_BOOK) {
+                System.out.println(result);
+            }
 
             if (StringUtils.isNotEmpty(result) && result.contains("move")) {
 

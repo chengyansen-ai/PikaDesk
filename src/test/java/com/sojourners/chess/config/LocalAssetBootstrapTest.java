@@ -1,5 +1,6 @@
 package com.sojourners.chess.config;
 
+import com.sojourners.chess.enginee.Engine;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -32,6 +33,7 @@ final class LocalAssetBootstrapTest {
                 engine.network=engines/pikafish.nnue
                 engine.threads=12
                 engine.hashMiB=1024
+                engine.moveTimeMs=1500
                 book.files=books/PikaDesk-Community.xqb
                 book.enabled=true
                 cloudBook.enabled=true
@@ -50,6 +52,8 @@ final class LocalAssetBootstrapTest {
                 defaults.getEngineConfigList().getFirst().getOptions().get("EvalFile"));
         assertEquals(12, defaults.getThreadNum());
         assertEquals(1024, defaults.getHashSize());
+        assertEquals(Engine.AnalysisModel.FIXED_TIME, defaults.getAnalysisModel());
+        assertEquals(1500, defaults.getAnalysisValue());
         assertEquals(book.toAbsolutePath().normalize().toString(),
                 defaults.getOpenBookList().getFirst());
         assertTrue(defaults.getBookSwitch());

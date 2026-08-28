@@ -1,5 +1,6 @@
 package com.sojourners.chess.config;
 
+import com.sojourners.chess.enginee.Engine;
 import com.sojourners.chess.model.EngineConfig;
 
 import java.io.IOException;
@@ -57,6 +58,9 @@ final class LocalAssetBootstrap {
             target.setEngineName(engine.getName());
             target.setThreadNum(integer(profile, "engine.threads", 1, 256));
             target.setHashSize(integer(profile, "engine.hashMiB", 16, 1_048_576));
+            target.setAnalysisModel(Engine.AnalysisModel.FIXED_TIME);
+            target.setAnalysisValue(integer(profile,
+                    "engine.moveTimeMs", 100, 600_000));
             for (String book : books) {
                 if (!target.getOpenBookList().contains(book)) {
                     target.getOpenBookList().add(book);
