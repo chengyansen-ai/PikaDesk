@@ -174,6 +174,16 @@ public class Properties implements Serializable {
                     e.printStackTrace();
                 }
             }
+            if (prop != null) {
+                LocalAssetBootstrap.Result bootstrap = LocalAssetBootstrap.apply(
+                        prop, new File(PathUtils.getJarPath()).toPath());
+                if (bootstrap.changed()) {
+                    prop.save();
+                } else if (!bootstrap.diagnostics().isEmpty()) {
+                    System.err.println("Local asset bootstrap skipped: "
+                            + String.join("; ", bootstrap.diagnostics()));
+                }
+            }
         }
         return prop;
     }
