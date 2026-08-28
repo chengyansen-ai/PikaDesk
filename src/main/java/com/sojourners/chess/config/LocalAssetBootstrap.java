@@ -5,9 +5,11 @@ import com.sojourners.chess.model.EngineConfig;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -41,30 +43,43 @@ final class LocalAssetBootstrap {
                 return Result.failure("profile exceeds 64 KiB");
             }
             java.util.Properties profile = new java.util.Properties();
-            try (InputStream input = Files.newInputStream(profilePath)) {
+            try (var input = Files.newBufferedReader(profilePath, StandardCharsets.UTF_8)) {
                 profile.load(input);
             }
 
-            EngineConfig engine = engine(profile, assets);
+            EngineConfig engine = engine(profile, assets, "engine");
+            EngineConfig candidate = flag(profile, "engine.candidate.enabled")
+                    ? engine(profile, assets, "engine.candidate") : null;
             List<String> books = books(profile, assets);
             boolean usableEngineExists = target.getEngineConfigList().stream()
                     .anyMatch(LocalAssetBootstrap::isUsableEngine);
-            if (usableEngineExists) {
-                return Result.unchanged();
+            boolean engineAdded = false;
+            if (!usableEngineExists) {
+                target.getEngineConfigList().clear();
+                target.getEngineConfigList().add(engine);
+                target.setEngineName(engine.getName());
+                target.setThreadNum(integer(profile, "engine.threads", 1, 256));
+                target.setHashSize(integer(profile, "engine.hashMiB", 16, 1_048_576));
+                target.setAnalysisModel(Engine.AnalysisModel.FIXED_TIME);
+                target.setAnalysisValue(integer(profile,
+                        "engine.moveTimeMs", 100, 600_000));
+                engineAdded = true;
             }
-
-            target.getEngineConfigList().clear();
-            target.getEngineConfigList().add(engine);
-            target.setEngineName(engine.getName());
-            target.setThreadNum(integer(profile, "engine.threads", 1, 256));
-            target.setHashSize(integer(profile, "engine.hashMiB", 16, 1_048_576));
-            target.setAnalysisModel(Engine.AnalysisModel.FIXED_TIME);
-            target.setAnalysisValue(integer(profile,
-                    "engine.moveTimeMs", 100, 600_000));
+            boolean candidateAdded = false;
+            if (candidate != null && target.getEngineConfigList().stream()
+                    .noneMatch(existing -> sameExecutable(existing, candidate))) {
+                target.getEngineConfigList().add(candidate);
+                candidateAdded = true;
+            }
+            boolean bookAdded = false;
             for (String book : books) {
                 if (!target.getOpenBookList().contains(book)) {
                     target.getOpenBookList().add(book);
+                    bookAdded = true;
                 }
+            }
+            if (!engineAdded && !candidateAdded && !bookAdded) {
+                return Result.unchanged();
             }
             target.setBookSwitch(flag(profile, "book.enabled"));
             target.setUseCloudBook(flag(profile, "cloudBook.enabled"));
@@ -78,16 +93,18 @@ final class LocalAssetBootstrap {
         }
     }
 
-    private static EngineConfig engine(java.util.Properties profile, Path assets)
+    private static EngineConfig engine(java.util.Properties profile,
+                                       Path assets,
+                                       String prefix)
             throws IOException {
-        String displayName = required(profile, "engine.displayName");
+        String displayName = required(profile, prefix + ".displayName");
         if (displayName.length() > 128) {
             throw new IllegalArgumentException("engine display name exceeds 128 characters");
         }
         Path executable = containedFile(assets,
-                required(profile, "engine.executable"), Long.MAX_VALUE);
+                required(profile, prefix + ".executable"), Long.MAX_VALUE);
         Path network = containedFile(assets,
-                required(profile, "engine.network"), Long.MAX_VALUE);
+                required(profile, prefix + ".network"), Long.MAX_VALUE);
         if (!executable.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".exe")) {
             throw new IllegalArgumentException("engine executable must be a Windows .exe file");
         }
@@ -107,21 +124,58 @@ final class LocalAssetBootstrap {
         return new EngineConfig(displayName, executable.toString(), "uci", options);
     }
 
+    private static boolean sameExecutable(EngineConfig first, EngineConfig second) {
+        if (first == null || first.getPath() == null || second.getPath() == null) {
+            return false;
+        }
+        try {
+            Path firstPath = Path.of(first.getPath()).toAbsolutePath().normalize();
+            Path secondPath = Path.of(second.getPath()).toAbsolutePath().normalize();
+            if (Files.exists(firstPath) && Files.exists(secondPath)) {
+                return Files.isSameFile(firstPath, secondPath);
+            }
+            return firstPath.equals(secondPath);
+        } catch (IOException | RuntimeException ignored) {
+            return false;
+        }
+    }
+
     private static List<String> books(java.util.Properties profile, Path assets)
             throws IOException {
         String value = profile.getProperty("book.files", "").trim();
         if (value.isEmpty()) {
             return List.of();
         }
+        boolean allowLegacyObk = flag(profile, "book.allowLegacyObk");
         List<String> result = new ArrayList<>();
         for (String item : value.split(",")) {
             Path book = containedFile(assets, item.trim(), MAX_BOOK_BYTES);
-            if (!book.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".xqb")) {
-                throw new IllegalArgumentException("packaged book must use the audited .xqb format");
+            String fileName = book.getFileName().toString().toLowerCase(Locale.ROOT);
+            if (fileName.endsWith(".obk")) {
+                if (!allowLegacyObk) {
+                    throw new IllegalArgumentException(
+                            "packaged .obk requires explicit opt-in");
+                }
+                requireSqliteHeader(book);
+            } else if (!fileName.endsWith(".xqb")) {
+                throw new IllegalArgumentException(
+                        "packaged book must use the audited .xqb format");
             }
             result.add(book.toString());
         }
         return List.copyOf(result);
+    }
+
+    private static void requireSqliteHeader(Path book) throws IOException {
+        byte[] expected = "SQLite format 3\0".getBytes(StandardCharsets.US_ASCII);
+        byte[] header = new byte[expected.length];
+        try (InputStream input = Files.newInputStream(book)) {
+            if (input.readNBytes(header, 0, header.length) != header.length
+                    || !Arrays.equals(header, expected)) {
+                throw new IllegalArgumentException(
+                        "packaged .obk must be a standard SQLite 3 container");
+            }
+        }
     }
 
     private static Path containedFile(Path root, String relative, long maxBytes)

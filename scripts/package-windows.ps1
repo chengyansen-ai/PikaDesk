@@ -69,9 +69,19 @@ try {
         -Destination (Join-Path $packageInput 'ui') -Recurse
 
     $localAssets = Join-Path $repoRoot 'local-assets'
-    if (Test-Path -LiteralPath (Join-Path $localAssets 'profile.properties') -PathType Leaf) {
-        Copy-Item -LiteralPath $localAssets `
-            -Destination (Join-Path $packageInput 'local-assets') -Recurse
+    $sourceProfile = Join-Path $localAssets 'profile.properties'
+    if (Test-Path -LiteralPath $sourceProfile -PathType Leaf) {
+        $packagedLocalAssets = Join-Path $packageInput 'local-assets'
+        New-Item -ItemType Directory -Force -Path $packagedLocalAssets | Out-Null
+        Copy-Item -LiteralPath $sourceProfile -Destination $packagedLocalAssets
+        $packagedAssetNames = @('engines', 'books')
+        foreach ($assetName in $packagedAssetNames) {
+            $assetSource = Join-Path $localAssets $assetName
+            if (Test-Path -LiteralPath $assetSource -PathType Container) {
+                Copy-Item -LiteralPath $assetSource `
+                    -Destination $packagedLocalAssets -Recurse
+            }
+        }
     } else {
         Write-Warning 'No local-assets profile found; the app image will require manual engine setup.'
     }
@@ -130,7 +140,6 @@ blocker. It is not an installer and does not bypass any commercial license.
         }
     }
 
-    $sourceProfile = Join-Path $localAssets 'profile.properties'
     if (Test-Path -LiteralPath $sourceProfile -PathType Leaf) {
         $packagedProfile = Join-Path $image 'app\mods\local-assets\profile.properties'
         if (-not (Test-Path -LiteralPath $packagedProfile -PathType Leaf)) {

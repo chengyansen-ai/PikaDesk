@@ -31,6 +31,9 @@ final class WindowsPackagingContractTest {
         assertTrue(script.contains("classes\\sound"));
         assertTrue(script.contains("classes\\ui"));
         assertTrue(script.contains("DEVELOPMENT-ONLY.txt"));
+        assertTrue(script.contains("$packagedAssetNames = @('engines', 'books')"));
+        assertTrue(script.contains("Copy-Item -LiteralPath $sourceProfile"));
+        assertFalse(script.contains("Copy-Item -LiteralPath $localAssets `"));
         assertFalse(script.contains("SkipTests"));
         assertFalse(script.contains("javafx:jlink"));
     }

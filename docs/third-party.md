@@ -21,6 +21,13 @@
 | `pikafish-avxvnni.exe` | `013161b469559552ccce8ac6af22b25b964ba75504b07d04dfc41cfe485c15d0` | Pikafish GPL v3；本机 i7-14700KF 真实 UCI 验收 |
 | `pikafish.nnue` | `c4026370d7516d9b0f668447f9ca1931241538bdc689cde6fec6a991ac4d5f77` | 上游 `NNUE-License.md`：仅限合法使用，未经许可不得商用，并明确禁止在线作弊等违法/违规用途 |
 
+同一镜像还保留开发候选，但不设为默认；候选来自官方源码 `master@b97ef0f9eb15bd99899b272e0236bfebf86313b6`，只与 2026-08-28 固定的 `master-net` 配套：
+
+| 文件 | SHA-256 | 许可/用途 |
+|---|---|---|
+| `Pikafish-master-b97ef0f-avxvnni.exe` | `47eec4637913068278ee336962fa7fd1dc3c27f0cd192ec06eddad9c251176b9` | 官方 GPL v3 源码的本机 AVX-VNNI PGO 构建；开发候选 |
+| master `pikafish.nnue` | `3cd15292bf8c979884262f57fc723959fc0dea43b4d8d544f88db5ceb2479e24` | 官方 `master-net`；受同一 NNUE 合法/非商用条款约束 |
+
 本机镜像使用 12 线程、1,024 MiB Hash、MultiPV 3；NNUE 与 EXE 同目录并以相对文件名加载，以兼容 `D:\象棋` 中文安装路径。完整性能证据见 [`performance-2026-08-28.md`](performance-2026-08-28.md)。
 
 若未来选择随安装包分发，必须重新审查 GPL 源码提供义务、NNUE 的非商用限制并把许可证原文加入最终包；当前验证不能视为发布许可已经关闭。
