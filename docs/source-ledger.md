@@ -6,6 +6,13 @@
 |---|---|---|---|
 | <https://github.com/official-pikafish/Pikafish> | 官方源码 | UCI/UCCI 引擎、GPLv3、构建说明 | 官方；2026-08-26 在线核实 |
 | <https://github.com/official-pikafish/Pikafish/releases/tag/Pikafish-2026-01-02> | 官方稳定发布 | 本机 AVX-VNNI 引擎、NNUE 与归档摘要 | 官方；2026-08-28 再次核实并完成真实 UCI/界面验收 |
+| <https://github.com/official-pikafish/Pikafish/compare/Pikafish-2026-01-02...master> | 官方源码比较 | 稳定 Release 到当前开发分支的提交与文件差异 | 官方；2026-08-28 显示 250 提交、92 文件变化 |
+| <https://github.com/official-pikafish/Pikafish/commits/master/> | 官方提交历史 | 固定当前候选 `b97ef0f9eb15bd99899b272e0236bfebf86313b6` 与最新提交时间/主题 | 官方；2026-08-28 在线核实并浅克隆固定提交 |
+| <https://github.com/official-pikafish/Networks/releases/tag/master-net> | 官方开发网络 | 与当前 `master` 配套的 NNUE 候选 | 官方；只与开发候选成对验证，不和 2026-01-02 二进制混用 |
+| <https://github.com/official-pikafish/Pikafish/actions/runs/32874284030> | 官方 CI 构建 | 固定 `b97ef0f...` 的成功 Windows/Linux/macOS/Android 构建和候选制品 | 官方 Actions；2026-08-28 本机经 GitHub API 核实成功且制品未过期 |
+| <https://www.msys2.org/docs/installer/> | MSYS2 官方安装说明 | 在 `local-assets` 隔离准备与官方 CI 同类的 clang64/make 构建环境 | 官方；要求校验发行摘要/签名，不修改系统级 PATH |
+| <https://github.com/msys2/msys2-installer/releases/tag/2026-06-11> | MSYS2 官方发行 | 固定本机隔离构建工具基线和 GitHub 资产摘要 | 官方；SFX SHA-256 `c105946e...1d65` 与摘要文件、GitHub digest 三方一致 |
+| <https://www.msys2.org/docs/ci/> | MSYS2 官方 CI 说明 | 交叉核对官方 Pikafish Windows Actions 的 `msys2/setup-msys2` 构建路径 | 官方；2026-08-28 在线核实 |
 | <https://github.com/official-pikafish/Pikafish/blob/master/src/uci.cpp> | 官方源码 | 核实 `go` 支持双方剩余时间、增益、剩余步数、固定时长、深度与节点等边界参数 | 官方源码；2026-08-26 在线核实 |
 | <https://github.com/official-pikafish/Pikafish/blob/master/src/timeman.cpp> | 官方源码 | 核实引擎内部区分最优/最大时间，并扣除 Move Overhead、约束当前步最大占用 | 官方源码；2026-08-26 在线核实 |
 | <https://github.com/official-pikafish/Pikafish/blob/master/src/search.cpp> | 官方源码 | 核实搜索中还会按评估下滑、最佳着稳定性与节点投入动态提前停止 | 官方源码；2026-08-26 在线核实 |
@@ -13,6 +20,10 @@
 | <https://www.chessdb.cn/cloudbook_info_en.html> | ChessDB 官方说明 | 持续由引擎分析扩充的中国象棋开局与残局知识库 | 官方；2026-08-28 在线核实 |
 | <https://www.chessdb.cn/cloudbook_api_en.html> | ChessDB 官方 API | `queryall` 请求、FEN 参数与返回字段 | 官方；2026-08-28 在线核实并完成五次真实请求 |
 | <https://github.com/noobpwnftw/chessdb> | ChessDB 公开源码 | 服务实现、数据工程与 Public Domain 声明 | 项目源码；2026-08-28 在线核实 |
+| <https://bbs.pikafish.org/forum.php?fid=41&mod=forumdisplay> | 皮卡鱼官方论坛开局库版 | 发现兵河大型库、云库单机版、用户库等社区候选和使用反馈 | 社区发现证据；下载帖本身未证明每个库的数据权属或再分发许可，暂不纳入合并 |
+| <https://www.sharkchess.com/archives/545> | 鲨鱼官方 XQB 说明 | 核实 OBK 哈希不可逆、OBK→XQB 无法完美全量转换，以及新建库建议采用可逆 XQB | 官方产品/格式说明；2026-08-28 在线复核 |
+| <https://github.com/CGLemon/chinese-chess-PGN> | 社区公开棋谱集合 | 发现 41,743 盘世界象棋联合会棋谱与 99,813 盘东萍棋谱，作者称已过滤非法着但未检查长照、长捉和重复 | 社区质量说明；仓库首页未给出清晰数据再分发许可证，暂不下载或并入 |
+| <https://github.com/xqbase/eleeye> | LGPL 开源象棋引擎与工具 | 参考由 PGN 制作 `BOOK.DAT` 的历史开局库流程及随仓库样例 | 源码许可明确；仍需逐文件确认棋谱/BOOK.DAT 的数据许可和格式转换价值后才能纳入 |
 | <https://github.com/sojourners/public-Xiangqi> | 开源源码 | 主线 GUI、连接器、识别、格式和开局库 | 已检查本地提交 |
 | <https://github.com/Vincentzyx/VinXiangQi> | 开源源码 | Windows 配置/识别/点击交互参考 | 已检查源码，非主线 |
 | <https://github.com/haruka411/cn-croissant> | 开源源码 | 分支树、MultiPV、数据库和现代桌面 UX | 已检查源码 |
