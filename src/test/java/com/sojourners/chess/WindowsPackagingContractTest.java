@@ -33,7 +33,9 @@ final class WindowsPackagingContractTest {
         assertTrue(script.contains("DEVELOPMENT-ONLY.txt"));
         assertTrue(script.contains("$packagedAssetNames = @('engines', 'books')"));
         assertTrue(script.contains("Copy-Item -LiteralPath $sourceProfile"));
+        assertTrue(script.contains("Set-Content -LiteralPath $hashManifest -Encoding utf8"));
         assertFalse(script.contains("Copy-Item -LiteralPath $localAssets `"));
+        assertFalse(script.contains("Set-Content -LiteralPath $hashManifest -Encoding ascii"));
         assertFalse(script.contains("SkipTests"));
         assertFalse(script.contains("javafx:jlink"));
     }

@@ -161,7 +161,7 @@ blocker. It is not an installer and does not bypass any commercial license.
             $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
             "$hash  $relative"
         }
-    $hashLines | Set-Content -LiteralPath $hashManifest -Encoding ascii
+    $hashLines | Set-Content -LiteralPath $hashManifest -Encoding utf8
 
     $files = @(Get-ChildItem -LiteralPath $image -Recurse -File)
     $bytes = ($files | Measure-Object -Property Length -Sum).Sum
