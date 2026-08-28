@@ -64,6 +64,10 @@ final class LocalAssetBootstrap {
             }
             target.setBookSwitch(flag(profile, "book.enabled"));
             target.setUseCloudBook(flag(profile, "cloudBook.enabled"));
+            target.setCloudBookTimeout(integer(profile,
+                    "cloudBook.timeoutMs", 100, 30_000));
+            target.setOffManualSteps(integer(profile,
+                    "book.offManualSteps", 1, 9999));
             return new Result(true, List.of());
         } catch (IOException | IllegalArgumentException failure) {
             return Result.failure(failure.getMessage());

@@ -35,6 +35,8 @@ final class LocalAssetBootstrapTest {
                 book.files=books/PikaDesk-Community.xqb
                 book.enabled=true
                 cloudBook.enabled=true
+                cloudBook.timeoutMs=900
+                book.offManualSteps=20
                 """);
 
         Properties defaults = Properties.createDefault();
@@ -52,6 +54,8 @@ final class LocalAssetBootstrapTest {
                 defaults.getOpenBookList().getFirst());
         assertTrue(defaults.getBookSwitch());
         assertTrue(defaults.getUseCloudBook());
+        assertEquals(900, defaults.getCloudBookTimeout());
+        assertEquals(20, defaults.getOffManualSteps());
     }
 
     @Test

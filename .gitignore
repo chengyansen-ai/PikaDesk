@@ -1,5 +1,6 @@
 # Maven and Java build output
 target/
+local-assets/
 *.class
 
 # Local developer tools and runtime downloads

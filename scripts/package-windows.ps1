@@ -68,6 +68,14 @@ try {
     Copy-Item -LiteralPath (Join-Path $repoRoot 'target\classes\ui') `
         -Destination (Join-Path $packageInput 'ui') -Recurse
 
+    $localAssets = Join-Path $repoRoot 'local-assets'
+    if (Test-Path -LiteralPath (Join-Path $localAssets 'profile.properties') -PathType Leaf) {
+        Copy-Item -LiteralPath $localAssets `
+            -Destination (Join-Path $packageInput 'local-assets') -Recurse
+    } else {
+        Write-Warning 'No local-assets profile found; the app image will require manual engine setup.'
+    }
+
     $developmentNotice = Join-Path $target 'DEVELOPMENT-ONLY.txt'
     @'
 PikaDesk development app-image only.
@@ -119,6 +127,14 @@ blocker. It is not an installer and does not bypass any commercial license.
     foreach ($path in $required) {
         if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
             throw "Packaged artifact is incomplete: $path"
+        }
+    }
+
+    $sourceProfile = Join-Path $localAssets 'profile.properties'
+    if (Test-Path -LiteralPath $sourceProfile -PathType Leaf) {
+        $packagedProfile = Join-Path $image 'app\mods\local-assets\profile.properties'
+        if (-not (Test-Path -LiteralPath $packagedProfile -PathType Leaf)) {
+            throw "Packaged local asset profile is missing: $packagedProfile"
         }
     }
 
