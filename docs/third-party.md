@@ -9,17 +9,19 @@
 | PikaDesk | 0.1.0-dev | 本仓库 | `GPL-3.0-only` | 开发中 |
 | TCHESS / public-Xiangqi | commit `2d41525095639548059ebd930b0af4d29efc1364`，上游界面版本 1.9 | <https://github.com/sojourners/public-Xiangqi> | 上游随附 GNU GPL v3；本项目保守标记 `GPL-3.0-only` | 已固定并保留归属 |
 
-本仓库没有鲨鱼私有资源，也没有随包提供皮卡鱼引擎或 NNUE 权重。
+本仓库没有鲨鱼私有资源，也不把皮卡鱼引擎或 NNUE 权重提交进 Git。当前这台电脑的本地开发 app-image 会从被 Git 忽略的 `local-assets` 目录复制经哈希校验的官方引擎和权重；这不等于公开二进制发布许可已经关闭。
 
 ## 2. 本地验收用皮卡鱼（未随包）
 
-2026-08-26 从皮卡鱼官方 GitHub Release 下载 `Pikafish-2026-01-02`，只放在仓库外的本地 `work/tools` 验收目录，没有加入 Git 或当前 JAR。官方发布页：<https://github.com/official-pikafish/Pikafish/releases/tag/Pikafish-2026-01-02>。
+2026-08-26 从皮卡鱼官方 GitHub Release 下载 `Pikafish-2026-01-02`，源归档保存在仓库外本地工具目录。2026-08-28 将下列经哈希复核的两个运行文件复制进这台电脑的本地开发 app-image；它们没有加入 Git 或 Maven JAR。官方发布页：<https://github.com/official-pikafish/Pikafish/releases/tag/Pikafish-2026-01-02>。
 
 | 文件 | SHA-256 | 许可/用途 |
 |---|---|---|
 | `Pikafish.2026-01-02.7z` | `84257063905615919fb4ee6a70273a94843bb6ec04c45e3ac706098838bc1a49` | GitHub Release API 官方摘要已逐字节核对 |
 | `pikafish-avxvnni.exe` | `013161b469559552ccce8ac6af22b25b964ba75504b07d04dfc41cfe485c15d0` | Pikafish GPL v3；本机 i7-14700KF 真实 UCI 验收 |
 | `pikafish.nnue` | `c4026370d7516d9b0f668447f9ca1931241538bdc689cde6fec6a991ac4d5f77` | 上游 `NNUE-License.md`：仅限合法使用，未经许可不得商用，并明确禁止在线作弊等违法/违规用途 |
+
+本机镜像使用 12 线程、1,024 MiB Hash、MultiPV 3；NNUE 与 EXE 同目录并以相对文件名加载，以兼容 `D:\象棋` 中文安装路径。完整性能证据见 [`performance-2026-08-28.md`](performance-2026-08-28.md)。
 
 若未来选择随安装包分发，必须重新审查 GPL 源码提供义务、NNUE 的非商用限制并把许可证原文加入最终包；当前验证不能视为发布许可已经关闭。
 

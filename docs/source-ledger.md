@@ -5,10 +5,14 @@
 | 来源 | 类型 | 用途 | 当前证据级别 |
 |---|---|---|---|
 | <https://github.com/official-pikafish/Pikafish> | 官方源码 | UCI/UCCI 引擎、GPLv3、构建说明 | 官方；2026-08-26 在线核实 |
+| <https://github.com/official-pikafish/Pikafish/releases/tag/Pikafish-2026-01-02> | 官方稳定发布 | 本机 AVX-VNNI 引擎、NNUE 与归档摘要 | 官方；2026-08-28 再次核实并完成真实 UCI/界面验收 |
 | <https://github.com/official-pikafish/Pikafish/blob/master/src/uci.cpp> | 官方源码 | 核实 `go` 支持双方剩余时间、增益、剩余步数、固定时长、深度与节点等边界参数 | 官方源码；2026-08-26 在线核实 |
 | <https://github.com/official-pikafish/Pikafish/blob/master/src/timeman.cpp> | 官方源码 | 核实引擎内部区分最优/最大时间，并扣除 Move Overhead、约束当前步最大占用 | 官方源码；2026-08-26 在线核实 |
 | <https://github.com/official-pikafish/Pikafish/blob/master/src/search.cpp> | 官方源码 | 核实搜索中还会按评估下滑、最佳着稳定性与节点投入动态提前停止 | 官方源码；2026-08-26 在线核实 |
 | <https://github.com/official-pikafish/Networks/blob/master/README.md> | 官方权重许可 | NNUE 合法使用与非商用限制 | 官方；2026-08-26 在线核实 |
+| <https://www.chessdb.cn/cloudbook_info_en.html> | ChessDB 官方说明 | 持续由引擎分析扩充的中国象棋开局与残局知识库 | 官方；2026-08-28 在线核实 |
+| <https://www.chessdb.cn/cloudbook_api_en.html> | ChessDB 官方 API | `queryall` 请求、FEN 参数与返回字段 | 官方；2026-08-28 在线核实并完成五次真实请求 |
+| <https://github.com/noobpwnftw/chessdb> | ChessDB 公开源码 | 服务实现、数据工程与 Public Domain 声明 | 项目源码；2026-08-28 在线核实 |
 | <https://github.com/sojourners/public-Xiangqi> | 开源源码 | 主线 GUI、连接器、识别、格式和开局库 | 已检查本地提交 |
 | <https://github.com/Vincentzyx/VinXiangQi> | 开源源码 | Windows 配置/识别/点击交互参考 | 已检查源码，非主线 |
 | <https://github.com/haruka411/cn-croissant> | 开源源码 | 分支树、MultiPV、数据库和现代桌面 UX | 已检查源码 |
@@ -45,6 +49,7 @@
 | <https://github.com/java-native-access/jna> | 官方源码/许可证 | JNA/JNA Platform 5.15.0 双许可证 | 官方仓库 + Maven 构件 POM；2026-08-26 核实 |
 | <https://github.com/kwhat/jnativehook> | 官方源码/许可证 | JNativeHook 2.1.0 的 LGPL/GPL 许可说明 | 官方仓库 + Maven 构件 POM；2026-08-26 核实 |
 | <https://github.com/openjdk/jfx> | OpenJDK 官方源码 | JavaFX 23.0.1 的 GPL v2 + Classpath Exception | 官方仓库；2026-08-26 在线核实 |
+| <https://openjfx.io/javadoc/23/javafx.graphics/javafx/application/Platform.html#runLater(java.lang.Runnable)> | OpenJFX 23 官方 API | 后台开局库结果回到 JavaFX Application Thread 后更新控件 | 官方 API；2026-08-28 在线核实 |
 | <https://github.com/xerial/sqlite-jdbc> | 官方源码/许可证 | SQLite JDBC 3.45.2.0 的 Apache-2.0 许可 | 官方仓库 + Maven 构件 POM；2026-08-26 核实 |
 | <https://github.com/xerial/sqlite-jdbc/blob/3.45.2.0/src/main/java/org/sqlite/SQLiteConfig.java> | 固定版本官方源码 | `READONLY` 打开标志、关闭扩展加载、私有缓存与 JDBC 配置入口 | 与项目固定依赖 3.45.2.0 对齐；2026-08-27 核实 |
 | <https://www.sqlite.org/uri.html> | SQLite 官方文档 | URI `mode=ro` 和 `cache=private` 的只读打开语义 | 官方；2026-08-27 在线核实 |
