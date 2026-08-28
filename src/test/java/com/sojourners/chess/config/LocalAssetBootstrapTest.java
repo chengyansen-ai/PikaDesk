@@ -48,7 +48,7 @@ final class LocalAssetBootstrapTest {
         assertEquals("Pikafish 2026-01-02 AVX-VNNI", defaults.getEngineName());
         assertEquals(engine.toAbsolutePath().normalize().toString(),
                 defaults.getEngineConfigList().getFirst().getPath());
-        assertEquals(network.toAbsolutePath().normalize().toString(),
+        assertEquals(network.getFileName().toString(),
                 defaults.getEngineConfigList().getFirst().getOptions().get("EvalFile"));
         assertEquals(12, defaults.getThreadNum());
         assertEquals(1024, defaults.getHashSize());

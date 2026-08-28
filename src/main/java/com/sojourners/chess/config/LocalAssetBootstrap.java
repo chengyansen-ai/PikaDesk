@@ -94,8 +94,15 @@ final class LocalAssetBootstrap {
         if (!network.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".nnue")) {
             throw new IllegalArgumentException("engine network must be an .nnue file");
         }
+        if (!network.getParent().equals(executable.getParent())) {
+            throw new IllegalArgumentException(
+                    "engine network must be beside the packaged executable");
+        }
         LinkedHashMap<String, String> options = new LinkedHashMap<>();
-        options.put("EvalFile", network.toString());
+        // The engine process already runs in the executable directory. Keeping
+        // EvalFile relative avoids Windows native-process encoding damage when
+        // the app image is installed below a non-ASCII directory such as D:\象棋.
+        options.put("EvalFile", network.getFileName().toString());
         options.put("MultiPV", "3");
         return new EngineConfig(displayName, executable.toString(), "uci", options);
     }

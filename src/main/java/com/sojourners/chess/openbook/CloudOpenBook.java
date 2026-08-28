@@ -13,7 +13,7 @@ public class CloudOpenBook implements OpenBook {
 
     private static final boolean TRACE_BOOK =
             Boolean.getBoolean("pikadesk.book.trace");
-    private static final String URL = "https://www.chessdb.cn/chessdb.php";
+    private static final String URL = "http://www.chessdb.cn/chessdb.php";
 
     @Override
     public List<BookData> get(char[][] board, boolean redGo)  {
