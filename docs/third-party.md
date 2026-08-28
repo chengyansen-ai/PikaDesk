@@ -21,18 +21,26 @@
 | `pikafish-avxvnni.exe` | `013161b469559552ccce8ac6af22b25b964ba75504b07d04dfc41cfe485c15d0` | Pikafish GPL v3；本机 i7-14700KF 真实 UCI 验收 |
 | `pikafish.nnue` | `c4026370d7516d9b0f668447f9ca1931241538bdc689cde6fec6a991ac4d5f77` | 上游 `NNUE-License.md`：仅限合法使用，未经许可不得商用，并明确禁止在线作弊等违法/违规用途 |
 
-同一镜像还保留开发候选，但不设为默认；候选来自官方源码 `master@b97ef0f9eb15bd99899b272e0236bfebf86313b6`，只与 2026-08-28 固定的 `master-net` 配套：
+同一镜像还保留官方开发版；它来自官方源码 `master@b97ef0f9eb15bd99899b272e0236bfebf86313b6`，只与 2026-08-28 固定的 `master-net` 配套：
 
 | 文件 | SHA-256 | 许可/用途 |
 |---|---|---|
-| `Pikafish-master-b97ef0f-avxvnni.exe` | `47eec4637913068278ee336962fa7fd1dc3c27f0cd192ec06eddad9c251176b9` | 官方 GPL v3 源码的本机 AVX-VNNI PGO 构建；开发候选 |
+| `Pikafish-master-b97ef0f-avxvnni.exe` | `47eec4637913068278ee336962fa7fd1dc3c27f0cd192ec06eddad9c251176b9` | 官方 GPL v3 源码的本机 AVX-VNNI PGO 构建；本机计时配对后设为开发镜像默认 |
 | master `pikafish.nnue` | `3cd15292bf8c979884262f57fc723959fc0dea43b4d8d544f88db5ceb2479e24` | 官方 `master-net`；受同一 NNUE 合法/非商用条款约束 |
 
-本机镜像使用 12 线程、1,024 MiB Hash、MultiPV 3；NNUE 与 EXE 同目录并以相对文件名加载，以兼容 `D:\象棋` 中文安装路径。完整性能证据见 [`performance-2026-08-28.md`](performance-2026-08-28.md)。
+本机镜像使用 12 线程、1,024 MiB Hash、MultiPV 3；NNUE 与 EXE 同目录并以相对文件名加载，以兼容 `D:\象棋` 中文安装路径。52 局计时配对为 master 5 胜、46 和、1 负，40 局固定节点配对为 3 胜、34 和、3 负。该样本只支持本机时间预算下的默认选择，不是普适 Elo 声明；稳定 Release 完整保留为回退。完整性能证据见 [`performance-2026-08-28.md`](performance-2026-08-28.md)。
 
 若未来选择随安装包分发，必须重新审查 GPL 源码提供义务、NNUE 的非商用限制并把许可证原文加入最终包；当前验证不能视为发布许可已经关闭。
 
-## 3. Maven 运行时依赖
+## 3. 可选开局语料与本地衍生库（未提交 Git）
+
+专属 OBK 的补空白流程可读取 [Chinese Chess Practical Dataset](https://github.com/Yvonne761/Chinese-Chess-Practical-Dataset) 的 `Dataset/开局`。本机审计固定提交 `368a47a947773dd8692c026e286dd19b6277b993`，仓库许可证为 Creative Commons Attribution 4.0 International（CC BY 4.0），版权标注 `Copyright (c) 2026 Yu-Han Tseng`。
+
+PikaDesk 仓库不包含该数据集，也不包含用户原始 OBK 或生成后的个人库。使用者自行取得数据时必须保留作者署名、许可证链接并说明筛选/转换；本机生成物随附许可证原文和 manifest。961 个开局文件经严格 Big5 解码与逐着合法性检查后，828 个通过、133 个拒绝，去重得到 682 条主线；最终只在原精选库完全没有候选的局面补入 552 行，未把单盘结果冒充聚合胜率。
+
+用户提供的 `小冰库.obk` 只在本机只读审计。其内部多来源备注不能证明第三方数据的再分发许可，因此原库、筛选库和个人库均被 Git 忽略，不作为公开源码仓库的一部分。
+
+## 4. Maven 运行时依赖
 
 以下 SHA-256 是 2026-08-26 由 Maven Central 下载并用于本机验证的实际 JAR。当前普通 Maven JAR 不把这些依赖合并进去；未来 jlink/jpackage 发布时必须从最终包重新生成 SBOM 和文件哈希，不能把本表当作永久发布清单。
 
@@ -53,7 +61,7 @@
 
 JUnit、Maven 插件和 Maven Wrapper 只用于构建/测试，不进入当前应用运行时。它们的固定版本在 `pom.xml` 与 `.mvn/wrapper/maven-wrapper.properties` 中维护。
 
-## 4. 随包资源
+## 5. 随包资源
 
 所有非文本资源的逐文件 SHA-256 见 [`bundled-resources.sha256`](bundled-resources.sha256)，并由 `ThirdPartyNoticeTest` 自动核对，避免资源变化绕过审计。
 
@@ -63,7 +71,7 @@ JUnit、Maven 插件和 Maven Wrapper 只用于构建/测试，不进入当前�
 | `model/yolov11.onnx` | 10,575,683 字节；嵌入元数据：Ultralytics YOLO11n、导出版本 8.3.17、日期 2024-10-19；SHA-256 `099c4ef0cbfbd07f680037bb1aabf59024f5c0243964b36aeec7c7a57f7213e1` | 模型内自述 `AGPL-3.0`；上游 V1.6 只说明升级 YOLO11，未提供训练脚本、数据集许可或独立来源 | **发布阻断**：开发审计可保留；确认来源或替换前不得制作公开安装包 |
 | `font/chessman.ttf` | 7,232 字节；随 TCHESS 固定提交引入；SHA-256 `016d2e0923bad6c81bd82a32b475cb630551d980c46151f37f85cc77e445089d` | 没有字体名称、作者或单独许可证 | **发布阻断**：向上游确认或替换为来源明确字体 |
 
-## 5. 发布门
+## 6. 发布门
 
 任何对外安装包必须同时满足：
 

@@ -23,6 +23,10 @@
 | <https://bbs.pikafish.org/forum.php?fid=41&mod=forumdisplay> | 皮卡鱼官方论坛开局库版 | 发现兵河大型库、云库单机版、用户库等社区候选和使用反馈 | 社区发现证据；下载帖本身未证明每个库的数据权属或再分发许可，暂不纳入合并 |
 | <https://www.sharkchess.com/archives/545> | 鲨鱼官方 XQB 说明 | 核实 OBK 哈希不可逆、OBK→XQB 无法完美全量转换，以及新建库建议采用可逆 XQB | 官方产品/格式说明；2026-08-28 在线复核 |
 | <https://github.com/CGLemon/chinese-chess-PGN> | 社区公开棋谱集合 | 发现 41,743 盘世界象棋联合会棋谱与 99,813 盘东萍棋谱，作者称已过滤非法着但未检查长照、长捉和重复 | 社区质量说明；仓库首页未给出清晰数据再分发许可证，暂不下载或并入 |
+| <https://github.com/Yvonne761/Chinese-Chess-Practical-Dataset/tree/368a47a947773dd8692c026e286dd19b6277b993> | CC BY 4.0 中国象棋实战数据集 | 固定 `Dataset/开局` 的 Big5/CP950 中文记谱；逐着合法性审计、去重和个人库空白补全 | 许可明确；961 文件中 828 通过、133 拒绝，682 条唯一合法线；数据本身不提交本仓库 |
+| <https://www.wxf-xiangqi.org/index.php?Itemid=313&id=218&lang=en&option=com_content&view=article> | 世界象棋联合会棋谱目录 | 核对 1990—2025 比赛记录覆盖 | 官方目录；未看到批量再分发授权，因此未抓取或并入 |
+| <https://github.com/nguyenpham/MRXqOpeningBook> | MIT 开局库工具源码 | 交叉参考中文记谱建库算法与未完成边界 | 源码许可明确；2018 v0.1，不作为棋谱数据源 |
+| <https://github.com/nguyenpham/oobs> | MIT 开局库构建源码 | 交叉参考不可逆哈希开局库和权重处理 | 源码许可明确；只作算法参考，不复制数据 |
 | <https://github.com/xqbase/eleeye> | LGPL 开源象棋引擎与工具 | 参考由 PGN 制作 `BOOK.DAT` 的历史开局库流程及随仓库样例 | 源码许可明确；仍需逐文件确认棋谱/BOOK.DAT 的数据许可和格式转换价值后才能纳入 |
 | <https://github.com/sojourners/public-Xiangqi> | 开源源码 | 主线 GUI、连接器、识别、格式和开局库 | 已检查本地提交 |
 | <https://github.com/Vincentzyx/VinXiangQi> | 开源源码 | Windows 配置/识别/点击交互参考 | 已检查源码，非主线 |

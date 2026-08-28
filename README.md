@@ -4,7 +4,7 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![Java](https://img.shields.io/badge/Java-21-orange.svg)](docs/development.md)
-[![Tests](https://img.shields.io/badge/tests-336%2F336-brightgreen.svg)](docs/release-readiness.md)
+[![Tests](https://img.shields.io/badge/tests-361_total%2C_4_opt--in-brightgreen.svg)](docs/release-readiness.md)
 [![Status](https://img.shields.io/badge/status-development_preview-yellow.svg)](CHANGELOG.md)
 
 PikaDesk 是一个完全免费、本地优先的中国象棋桌面工作台。它把局面分析、五引擎并行、分支棋谱、开局库、多格式读写和经过授权的本地棋盘自动化组织成一套可运行、可测试、可审计的工程系统。
@@ -33,6 +33,7 @@ PikaDesk 是一个完全免费、本地优先的中国象棋桌面工作台。�
 | 分支棋谱工作台 | 已验证 | 主线、变例、注释、评估、失误与安全保存 |
 | PGN/XQF/CBR/TXQ | 分级支持 | 无法表示的字段会明确拒绝或报告 |
 | XQB v1 开局库 | 已验证 | 批量导入、去重、进度、取消与断点恢复 |
+| 个人 OBK 构建 | 已验证 | 用户自有主库过滤；CC BY 4.0 语料严格解码、逐着校验、去重与空白补全 |
 | 时间策略与脚本 DSL | 内核通过 | 有界预算与白名单能力，不执行任意脚本 |
 | 授权本地棋盘自动化 | 开发预览 | 单步闭环和 406 半回合耐久证据；尚未完成 1,000 半回合门槛 |
 | 正式二进制发行 | 暂未开放 | YOLO 模型来源与字体许可仍需关闭发布门 |
@@ -59,13 +60,15 @@ flowchart LR
 
 ## 验证状态
 
-截至 2026-08-27：
+截至 2026-08-29：
 
 | 验证项 | 结果 |
 |---|---|
-| Maven 全量测试 | **336/336**，零失败、错误或跳过 |
+| Maven 全量测试 | **361** 个测试，零失败、零错误；4 个本机资产验收用例按设计默认跳过并已显式运行通过 |
 | Windows 中文路径 | `D:\象棋\PikaDesk` 构建、测试、打包通过 |
-| 开发镜像 | 223 个文件，222 项 SHA-256 复算一致 |
+| 开发镜像 | 236 项 UTF-8 SHA-256 清单逐文件复算一致 |
+| 默认引擎 | 官方 `master@b97ef0f9` 本机 AVX-VNNI PGO；稳定 Release 完整回退 |
+| 个人开局库 | 622,727 行，SQLite `quick_check=ok`，同键同着重复 0 |
 | 本地启动网络观察 | TCP/UDP 端点为 0 |
 | 五个 Pikafish 进程 | 并行分析通过，退出后无残留 |
 | 授权棋盘单步 | 红/黑方向与 100%/150% 测试缩放通过 |
