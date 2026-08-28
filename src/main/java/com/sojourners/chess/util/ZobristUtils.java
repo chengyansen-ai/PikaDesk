@@ -5,6 +5,25 @@ import java.util.Map;
 
 public class ZobristUtils {
 
+    public static int getVmoveFromMove(String move, boolean leftRightSwap) {
+        if (move == null || !move.matches("[a-i][0-9][a-i][0-9]")
+                || move.substring(0, 2).equals(move.substring(2, 4))) {
+            throw new IllegalArgumentException("move must use distinct UCCI coordinates");
+        }
+        int first = c90Coordinate(move.charAt(0), move.charAt(1), leftRightSwap);
+        int second = c90Coordinate(move.charAt(2), move.charAt(3), leftRightSwap);
+        return first << 8 | second;
+    }
+
+    private static int c90Coordinate(char fileSymbol,
+                                     char rankSymbol,
+                                     boolean leftRightSwap) {
+        int file = fileSymbol - 'a';
+        if (leftRightSwap) file = 8 - file;
+        int row = 9 - (rankSymbol - '0');
+        return (row + 3) << 4 | file + 3;
+    }
+
     public static String getMoveFromVmove(int vmove, boolean leftRightSwap) {
         int first = vmove >> 8, second = vmove & 255;
         if (leftRightSwap) {
