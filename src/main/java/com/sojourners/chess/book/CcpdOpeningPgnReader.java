@@ -114,6 +114,14 @@ public final class CcpdOpeningPgnReader {
         int expectedNumber = 1;
         for (; index < lines.length; index++) {
             if (lines[index].isBlank()) continue;
+            String trimmed = lines[index].trim();
+            if (RESULTS.contains(trimmed)) {
+                if (movetextResult != null) {
+                    throw new ReadException("MALFORMED_MOVETEXT");
+                }
+                movetextResult = trimmed;
+                continue;
+            }
             if (movetextResult != null) {
                 throw new ReadException("MALFORMED_MOVETEXT");
             }
@@ -149,7 +157,7 @@ public final class CcpdOpeningPgnReader {
             moves.add(decoded.ucci());
             return decoded.nextFen();
         } catch (StrictChineseMoveDecoder.DecodeException exception) {
-            throw new ReadException("INVALID_MOVE", exception);
+            throw new ReadException("INVALID_MOVE", "ply=" + (moves.size() + 1), exception);
         }
     }
 
@@ -189,6 +197,11 @@ public final class CcpdOpeningPgnReader {
 
         private ReadException(String code, Throwable cause) {
             super(code, cause);
+            this.code = code;
+        }
+
+        private ReadException(String code, String detail, Throwable cause) {
+            super(code + " " + detail, cause);
             this.code = code;
         }
 

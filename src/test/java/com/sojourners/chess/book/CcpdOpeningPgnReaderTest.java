@@ -60,6 +60,14 @@ final class CcpdOpeningPgnReaderTest {
         assertEquals("MALFORMED_MOVETEXT", failure(gap).code());
     }
 
+    @Test
+    void acceptsAStandardStandaloneResultLine(@TempDir Path directory) throws IOException {
+        Path source = write(directory, "standalone-result.pgn",
+                validPgn("1. 炮二平五 馬８進７\r\n2. 馬二進三 車９平８\r\n\r\n*"));
+
+        assertEquals(4, reader.read(source).moves().size());
+    }
+
     private CcpdOpeningPgnReader.ReadException failure(Path source) {
         return assertThrows(CcpdOpeningPgnReader.ReadException.class, () -> reader.read(source));
     }
