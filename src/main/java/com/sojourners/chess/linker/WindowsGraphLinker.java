@@ -229,6 +229,7 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
             return false;
         }
         try {
+            confirmationRetriesLeft = 1;
             thinkBeforeMove();
             BoardCoordinateMapper.Orientation recognizedOrientation = reversed
                     ? BoardCoordinateMapper.Orientation.BLACK_AT_BOTTOM
@@ -268,17 +269,41 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
                             5_000
                     );
             if (!outcome.confirmed()) {
-                // ANIMATION_TIMEOUT usually means the click landed but the
-                // confirmation window missed the stable frame (slow animation,
-                // network jitter). If the board already changed since the
-                // click, treat the move as applied and let the scan loop
-                // resync from the new position instead of pausing the session.
-                if (shouldResyncOnConfirmationTimeout(
-                        outcome.confirmationStatus(),
-                        visualBoardChangedSinceClick(visualPositionBeforeMove))) {
-                    System.err.println(
-                            "confirmation missed but board already changed; resyncing");
-                    return true;
+                boolean timeout = outcome.confirmationStatus().orElse(null)
+                        == MoveConfirmationTracker.Status.ANIMATION_TIMEOUT;
+                if (timeout) {
+                    if (visualBoardChangedSinceClick(visualPositionBeforeMove)) {
+                        System.err.println(
+                                "confirmation missed but board already changed; resyncing");
+                        return true;
+                    }
+                    if (confirmationRetriesLeft > 0) {
+                        // Board unchanged: the click had no effect, so a
+                        // bounded retry is safe and cannot duplicate a move.
+                        confirmationRetriesLeft--;
+                        if (moveCoordinator.resetForRetry()) {
+                            System.err.println("retrying the move once");
+                            outcome = coordinator.executeAndConfirm(
+                                    calibration,
+                                    canonicalPositionBeforeMove,
+                                    visualPositionBeforeMove,
+                                    canonicalMove,
+                                    visualMove,
+                                    profile.clickDelayMillis(),
+                                    profile.moveDelayMillis(),
+                                    5_000
+                            );
+                            if (outcome.confirmed()) {
+                                return true;
+                            }
+                            timeout = outcome.confirmationStatus().orElse(null)
+                                    == MoveConfirmationTracker.Status.ANIMATION_TIMEOUT;
+                            if (timeout && visualBoardChangedSinceClick(
+                                    visualPositionBeforeMove)) {
+                                return true;
+                            }
+                        }
+                    }
                 }
                 String detail = outcome.detail();
                 if (detail == null || detail.isBlank()) {
@@ -324,6 +349,8 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
         }
     }
 
+    private int confirmationRetriesLeft = 1;
+
     /**
      * Pure decision rule: a confirmation timeout may be recovered from when
      * the board has already changed since the click (the move applied, only
@@ -338,22 +365,24 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
     }
 
     /**
-     * Reads one fresh frame and compares it against the pre-click visual
+     * Reads two consecutive frames (the stability tracker needs two identical
+     * frames to accept) and compares the second against the pre-click visual
      * position. Conservative: any recognition failure or orientation
-     * ambiguity reports "unchanged" so the session pauses instead of
-     * risking a duplicate move.
+     * ambiguity reports "unchanged" so the session pauses or retries instead
+     * of risking a duplicate move.
      */
     private boolean visualBoardChangedSinceClick(char[][] visualPositionBeforeMove) {
         if (visualPositionBeforeMove == null) {
             return false;
         }
         try {
-            RecognitionResult result = recognizeNextVisualFrame();
-            if (!result.accepted()) {
+            recognizeNextVisualFrame(); // priming frame for the stability tracker
+            RecognitionResult stable = recognizeNextVisualFrame();
+            if (!stable.accepted()) {
                 return false;
             }
             char[][] current = ObservedBoardOrientation.normalize(
-                    result.position().orElseThrow().boardCopy()).boardCopy();
+                    stable.position().orElseThrow().boardCopy()).boardCopy();
             return !Arrays.deepEquals(current, visualPositionBeforeMove);
         } catch (RuntimeException failure) {
             return false;

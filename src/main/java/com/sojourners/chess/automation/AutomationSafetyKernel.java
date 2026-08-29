@@ -67,6 +67,26 @@ public final class AutomationSafetyKernel {
     }
 
     /**
+     * Returns a paused kernel to OBSERVING for one bounded retry. Only legal
+     * when the session is paused with the same authorization; the caller must
+     * have verified the board is unchanged (no side effects) before retrying.
+     */
+    public synchronized boolean resetAndReauthorize(
+            Authorization requestedAuthorization) {
+        if (state != AutomationState.PAUSED) {
+            lastReason = "retry requires a paused kernel";
+            return false;
+        }
+        if (requestedAuthorization == null
+                || !requestedAuthorization.equals(authorization)) {
+            lastReason = "retry authorization must match the original";
+            return false;
+        }
+        state = AutomationState.DISABLED;
+        return arm(requestedAuthorization) && beginObservation();
+    }
+
+    /**
      * Runs at most one authorized move sequence. Every low-level event in that
      * sequence must pass through the supplied permit. Emergency stop invalidates
      * the permit, including while the sequence is waiting between events.

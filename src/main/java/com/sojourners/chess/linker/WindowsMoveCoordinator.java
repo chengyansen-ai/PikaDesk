@@ -46,6 +46,14 @@ public final class WindowsMoveCoordinator {
         return kernel.arm(target.authorization()) && kernel.beginObservation();
     }
 
+    /**
+     * Resets a paused session to OBSERVING for one bounded retry. Only call
+     * after verifying the board is unchanged (the failed click had no effect).
+     */
+    public boolean resetForRetry() {
+        return kernel.resetAndReauthorize(target.authorization());
+    }
+
     public ExecutionOutcome executeAndConfirm(
             BoardCoordinateMapper.Calibration calibration,
             char[][] canonicalPositionBeforeMove,

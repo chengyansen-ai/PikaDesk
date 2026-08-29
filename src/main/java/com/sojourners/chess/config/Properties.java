@@ -94,7 +94,7 @@ public class Properties implements Serializable {
     private int mouseMoveDelay = 0;
 
     /** Pause before each automated move, mimicking human thinking time. */
-    private int linkThinkDelay = 600;
+    private int linkThinkDelay = 1_000;
     /*
      * 显示棋谱管理
      */

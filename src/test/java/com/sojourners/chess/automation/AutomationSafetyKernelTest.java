@@ -170,6 +170,37 @@ final class AutomationSafetyKernelTest {
         );
     }
 
+    @Test
+    void pausedKernelCanResetForOneBoundedRetryWithSameAuthorization() {
+        AutomationSafetyKernel kernel = confirmingKernel();
+        AutomationSafetyKernel.Authorization original =
+                new AutomationSafetyKernel.Authorization("local-test-board", 1);
+        kernel.validationFailed("confirmation timeout");
+
+        assertAll(
+                () -> assertEquals(AutomationState.PAUSED, kernel.state()),
+                () -> assertTrue(kernel.resetAndReauthorize(original)),
+                () -> assertEquals(AutomationState.OBSERVING, kernel.state()),
+                () -> assertTrue(kernel.recognitionAccepted()),
+                () -> assertTrue(kernel.beginThinking()),
+                () -> assertTrue(kernel.readyToExecute())
+        );
+    }
+
+    @Test
+    void resetRequiresPausedStateAndMatchingAuthorization() {
+        AutomationSafetyKernel fresh = new AutomationSafetyKernel();
+        assertFalse(fresh.resetAndReauthorize(
+                new AutomationSafetyKernel.Authorization("local-test-board", 1)));
+
+        AutomationSafetyKernel kernel = confirmingKernel();
+        kernel.validationFailed("confirmation timeout");
+        assertFalse(kernel.resetAndReauthorize(
+                new AutomationSafetyKernel.Authorization("other-target", 2)));
+        assertFalse(kernel.resetAndReauthorize(null));
+        assertEquals(AutomationState.PAUSED, kernel.state());
+    }
+
     private AutomationSafetyKernel confirmingKernel() {
         AutomationSafetyKernel kernel = readyKernel();
         assertTrue(kernel.executeOne(permit -> assertTrue(permit.send(() -> { }))));
