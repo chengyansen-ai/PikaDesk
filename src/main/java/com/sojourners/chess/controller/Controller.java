@@ -1444,8 +1444,12 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
     public void linkerMove(int x1, int y1, int x2, int y2) {
         Platform.runLater(() -> {
             if (isWatchMode()) {
-                ObservedTurnAlignment alignment = ObservedTurnAlignment.fromMove(
+                var observedAlignment = ObservedTurnAlignment.tryFromMove(
                         redGo, board.getBoard()[y1][x1]);
+                if (observedAlignment.isEmpty()) {
+                    return;
+                }
+                ObservedTurnAlignment alignment = observedAlignment.orElseThrow();
                 if (alignment.corrected()) {
                     engineStop();
                     redGo = alignment.moverRed();

@@ -39,4 +39,11 @@ final class ObservedTurnAlignmentTest {
         assertThrows(IllegalArgumentException.class,
                 () -> ObservedTurnAlignment.fromMove(true, '?'));
     }
+
+    @Test
+    void duplicateQueuedFrameCanBeDroppedWithoutThrowingOnTheUiThread() {
+        assertTrue(ObservedTurnAlignment.tryFromMove(true, ' ').isEmpty());
+        assertTrue(ObservedTurnAlignment.tryFromMove(false, '?').isEmpty());
+        assertTrue(ObservedTurnAlignment.tryFromMove(true, 'P').isPresent());
+    }
 }
