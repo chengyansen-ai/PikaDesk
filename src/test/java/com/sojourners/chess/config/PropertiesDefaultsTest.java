@@ -18,6 +18,10 @@ final class PropertiesDefaultsTest {
 
         assertFalse(defaults.getUseCloudBook());
         assertFalse(defaults.getBookSwitch());
+        assertFalse(defaults.isVoiceEnabled());
+        assertTrue(defaults.isVoiceMoves());
+        assertTrue(defaults.isVoiceWarnings());
+        assertTrue(defaults.isVoiceResults());
     }
 
     @Test
@@ -25,6 +29,10 @@ final class PropertiesDefaultsTest {
         Properties configured = Properties.createDefault();
         configured.setUseCloudBook(true);
         configured.setBookSwitch(true);
+        configured.setVoiceEnabled(true);
+        configured.setVoiceMoves(false);
+        configured.setVoiceWarnings(true);
+        configured.setVoiceResults(false);
 
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         try (ObjectOutputStream output = new ObjectOutputStream(bytes)) {
@@ -38,5 +46,9 @@ final class PropertiesDefaultsTest {
 
         assertTrue(reloaded.getUseCloudBook());
         assertTrue(reloaded.getBookSwitch());
+        assertTrue(reloaded.isVoiceEnabled());
+        assertFalse(reloaded.isVoiceMoves());
+        assertTrue(reloaded.isVoiceWarnings());
+        assertFalse(reloaded.isVoiceResults());
     }
 }

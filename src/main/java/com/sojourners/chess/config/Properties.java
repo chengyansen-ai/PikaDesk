@@ -30,6 +30,15 @@ public class Properties implements Serializable {
 
     private boolean stepSound;
 
+    /*
+     * Wrapper types preserve safe defaults when an older serialized settings
+     * file does not contain these fields.
+     */
+    private Boolean voiceEnabled;
+    private Boolean voiceMoves;
+    private Boolean voiceWarnings;
+    private Boolean voiceResults;
+
     private boolean showNumber = true;
 
     private boolean topWindow = false;
@@ -415,6 +424,38 @@ public class Properties implements Serializable {
 
     public void setStepSound(boolean stepSound) {
         this.stepSound = stepSound;
+    }
+
+    public boolean isVoiceEnabled() {
+        return Boolean.TRUE.equals(voiceEnabled);
+    }
+
+    public void setVoiceEnabled(boolean voiceEnabled) {
+        this.voiceEnabled = voiceEnabled;
+    }
+
+    public boolean isVoiceMoves() {
+        return voiceMoves == null || voiceMoves;
+    }
+
+    public void setVoiceMoves(boolean voiceMoves) {
+        this.voiceMoves = voiceMoves;
+    }
+
+    public boolean isVoiceWarnings() {
+        return voiceWarnings == null || voiceWarnings;
+    }
+
+    public void setVoiceWarnings(boolean voiceWarnings) {
+        this.voiceWarnings = voiceWarnings;
+    }
+
+    public boolean isVoiceResults() {
+        return voiceResults == null || voiceResults;
+    }
+
+    public void setVoiceResults(boolean voiceResults) {
+        this.voiceResults = voiceResults;
     }
 
     public Engine.AnalysisModel getAnalysisModel() {

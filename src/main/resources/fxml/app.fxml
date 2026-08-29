@@ -12,6 +12,7 @@
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.RadioMenuItem?>
 <?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
@@ -84,6 +85,15 @@
                     <items>
                         <CheckMenuItem fx:id="menuOfStepTip" mnemonicParsing="false" onAction="#stepTipChecked" text="棋步提示" />
                         <CheckMenuItem fx:id="menuOfStepSound" mnemonicParsing="false" onAction="#stepSoundClick" text="走棋音效" />
+                        <Menu mnemonicParsing="false" text="中文语音">
+                            <items>
+                                <CheckMenuItem fx:id="menuOfVoiceEnabled" mnemonicParsing="false" onAction="#voiceSettingChanged" text="启用本地语音" />
+                                <SeparatorMenuItem mnemonicParsing="false" />
+                                <CheckMenuItem fx:id="menuOfVoiceMoves" mnemonicParsing="false" onAction="#voiceSettingChanged" text="播报走法" />
+                                <CheckMenuItem fx:id="menuOfVoiceWarnings" mnemonicParsing="false" onAction="#voiceSettingChanged" text="播报警告" />
+                                <CheckMenuItem fx:id="menuOfVoiceResults" mnemonicParsing="false" onAction="#voiceSettingChanged" text="播报结果" />
+                            </items>
+                        </Menu>
                         <CheckMenuItem fx:id="menuOfShowNumber" mnemonicParsing="false" onAction="#showNumberClick" text="显示线路" />
                         <CheckMenuItem fx:id="menuOfTopWindow" mnemonicParsing="false" onAction="#topWindowClick" text="窗口置顶" />
                         <CheckMenuItem fx:id="menuOfShowStatus" mnemonicParsing="false" onAction="#showStatusBarClick" text="显示状态栏" />

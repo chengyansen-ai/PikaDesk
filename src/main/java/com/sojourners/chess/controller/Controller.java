@@ -15,6 +15,9 @@ import com.sojourners.chess.enginee.EngineCallBack;
 import com.sojourners.chess.linker.*;
 import com.sojourners.chess.linker.profile.ConnectionProfile;
 import com.sojourners.chess.linker.profile.ConnectionWizardState;
+import com.sojourners.chess.media.LocalVoiceService;
+import com.sojourners.chess.media.VoiceAnnouncement;
+import com.sojourners.chess.media.VoicePreferences;
 import com.sojourners.chess.menu.BoardContextMenu;
 import com.sojourners.chess.model.BookData;
 import com.sojourners.chess.model.EngineConfig;
@@ -119,6 +122,14 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
     @FXML
     private CheckMenuItem menuOfStepSound;
     @FXML
+    private CheckMenuItem menuOfVoiceEnabled;
+    @FXML
+    private CheckMenuItem menuOfVoiceMoves;
+    @FXML
+    private CheckMenuItem menuOfVoiceWarnings;
+    @FXML
+    private CheckMenuItem menuOfVoiceResults;
+    @FXML
     private CheckMenuItem menuOfLinkBackMode;
     @FXML
     private CheckMenuItem menuOfLinkAnimation;
@@ -131,6 +142,9 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
     private CheckMenuItem menuOfTopWindow;
 
     private Properties prop;
+
+    private final LocalVoiceService voiceService =
+            LocalVoiceService.createForCurrentPlatform();
 
     private Engine engine;
 
@@ -283,6 +297,26 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
         CheckMenuItem item = (CheckMenuItem) event.getTarget();
         prop.setStepSound(item.isSelected());
         board.setStepSound(prop.isStepSound());
+    }
+
+    @FXML
+    void voiceSettingChanged(ActionEvent event) {
+        prop.setVoiceEnabled(menuOfVoiceEnabled.isSelected());
+        prop.setVoiceMoves(menuOfVoiceMoves.isSelected());
+        prop.setVoiceWarnings(menuOfVoiceWarnings.isSelected());
+        prop.setVoiceResults(menuOfVoiceResults.isSelected());
+        applyVoiceSettings();
+    }
+
+    private void applyVoiceSettings() {
+        boolean enabled = menuOfVoiceEnabled.isSelected();
+        menuOfVoiceMoves.setDisable(!enabled);
+        menuOfVoiceWarnings.setDisable(!enabled);
+        menuOfVoiceResults.setDisable(!enabled);
+        voiceService.configure(new VoicePreferences(enabled,
+                menuOfVoiceMoves.isSelected(),
+                menuOfVoiceWarnings.isSelected(),
+                menuOfVoiceResults.isSelected()));
     }
 
     @FXML
@@ -477,12 +511,13 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
 
     }
     private void goCallBack(String move) {
+        String notation = board.translate(move, true);
         if (gameTreeNavigation != null) {
             // 树节点跳转后的新着法只进入新分支树，旧格式棋谱保持原样。
             gameTreeNavigation = gameTreePane.recordMove(move);
             board.setManualList(gameTreeNavigation.childMoves());
         } else {
-            List<String> nextList = chessManualHandle.boardMove(move, board.translate(move, true));
+            List<String> nextList = chessManualHandle.boardMove(move, notation);
             board.setManualList(nextList);
             if (gameTreePane != null) {
                 gameTreePane.recordMove(move);
@@ -490,6 +525,7 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
         }
         // 趋势图
         refreshLineChart();
+        announceMoveAndPosition(notation);
         // 切换行棋方
         redGo = !redGo;
         // 触发引擎走棋
@@ -500,6 +536,42 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
         }
         if (multiEnginePane != null) {
             multiEnginePane.analyzeIfRunning();
+        }
+    }
+
+    private void announceMoveAndPosition(String notation) {
+        if (prop == null || !prop.isVoiceEnabled()) {
+            return;
+        }
+        try {
+            if (prop.isVoiceMoves()) {
+                voiceService.announce(VoiceAnnouncement.move(notation));
+            }
+            boolean nextPlayerIsRed = !redGo;
+            if (prop.isVoiceResults()
+                    && XiangqiUtils.isSha(board.getBoard(),
+                    nextPlayerIsRed)) {
+                voiceService.announce(VoiceAnnouncement.result(
+                        redGo ? "红方胜" : "黑方胜"));
+            } else if (prop.isVoiceWarnings()
+                    && XiangqiUtils.isJiang(board.getBoard(),
+                    nextPlayerIsRed)) {
+                voiceService.announce(VoiceAnnouncement.warning("将军"));
+            }
+        } catch (RuntimeException ignored) {
+            // Optional speech must never affect a legal move or engine flow.
+        }
+    }
+
+    private void announceWarning(String message) {
+        if (prop == null || !prop.isVoiceEnabled()
+                || !prop.isVoiceWarnings()) {
+            return;
+        }
+        try {
+            voiceService.announce(VoiceAnnouncement.warning(message));
+        } catch (RuntimeException ignored) {
+            // Invalid or unavailable speech input is isolated from connection.
         }
     }
 
@@ -858,6 +930,12 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
         menuOfStepTip.setSelected(prop.isStepTip());
         // 走棋音效
         menuOfStepSound.setSelected(prop.isStepSound());
+        // 中文语音默认关闭；旧配置加载后仍保持关闭。
+        menuOfVoiceEnabled.setSelected(prop.isVoiceEnabled());
+        menuOfVoiceMoves.setSelected(prop.isVoiceMoves());
+        menuOfVoiceWarnings.setSelected(prop.isVoiceWarnings());
+        menuOfVoiceResults.setSelected(prop.isVoiceResults());
+        applyVoiceSettings();
         // 连线后台模式
         menuOfLinkBackMode.setSelected(prop.isLinkBackMode());
         // 连线动画确认
@@ -1391,6 +1469,7 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
 
     @FXML
     public void exit() {
+        voiceService.close();
         if (multiEnginePane != null) {
             multiEnginePane.close();
         }
@@ -1505,6 +1584,9 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
     @Override
     public void connectionStatus(ConnectionStatus status) {
         if (status == null) return;
+        if (status.state() == ConnectionStatus.State.PAUSED) {
+            announceWarning(status.message());
+        }
         Platform.runLater(() -> connectionStatusLabel.setText(
                 "连接：" + status.message()));
     }
@@ -1529,6 +1611,9 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
 
     @Override
     public void connectionConfigurationFailed(String message) {
+        if (message != null && !message.contains("已取消")) {
+            announceWarning(message);
+        }
         Platform.runLater(() -> {
             if (linkMode.getValue()) stopGraphLink();
             if (message != null && !message.contains("已取消")) {
