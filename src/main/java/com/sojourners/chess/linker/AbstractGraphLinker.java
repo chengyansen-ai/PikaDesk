@@ -581,6 +581,10 @@ public abstract class AbstractGraphLinker implements GraphLinker, Runnable {
         return boardPos == null ? null : new Rectangle(boardPos);
     }
 
+    protected final LinkMode connectionMode() {
+        return callBack.connectionMode();
+    }
+
     protected int boardFrameWidth() {
         return boardFrameWidth;
     }

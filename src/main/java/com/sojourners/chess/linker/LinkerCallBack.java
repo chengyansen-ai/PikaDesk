@@ -13,6 +13,12 @@ public interface LinkerCallBack {
 
     boolean isWatchMode();
 
+    default LinkMode connectionMode() {
+        return isWatchMode()
+                ? LinkMode.READ_ONLY_ADVISOR
+                : LinkMode.AUTHORIZED_AUTOMATION;
+    }
+
     void linkerMove(int x1, int y1, int x2, int y2);
 
     /**

@@ -1,5 +1,7 @@
 package com.sojourners.chess.linker;
 
+import com.sojourners.chess.linker.profile.ConnectionProfile;
+import com.sojourners.chess.linker.profile.ConnectionWizardState;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,5 +27,23 @@ final class LinkModeTest {
     @Test
     void legacyWatchLabelMigratesToReadOnlyAdvisor() {
         assertEquals(LinkMode.READ_ONLY_ADVISOR, LinkMode.fromDisplayName("观战模式"));
+    }
+
+    @Test
+    void callbackCarriesTheReadOnlyCapabilityToPlatformLinkers() {
+        LinkerCallBack callback = new StubCallback(true);
+
+        assertEquals(LinkMode.READ_ONLY_ADVISOR, callback.connectionMode());
+        assertFalse(callback.connectionMode().externalInputAllowed());
+    }
+
+    private record StubCallback(boolean isWatchMode) implements LinkerCallBack {
+        @Override public void linkerInitChessBoard(String fenCode, boolean isReverse) { }
+        @Override public char[][] getEngineBoard() { return new char[10][9]; }
+        @Override public boolean isThinking() { return false; }
+        @Override public void linkerMove(int x1, int y1, int x2, int y2) { }
+        @Override public ConnectionProfile configureConnection(ConnectionWizardState wizard) {
+            return null;
+        }
     }
 }

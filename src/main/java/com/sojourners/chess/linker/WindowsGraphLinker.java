@@ -29,6 +29,7 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
     private WindowsMoveCoordinator moveCoordinator;
     private ConnectionProfile approvedProfile;
     private BoardCoordinateMapper.TargetSnapshot approvedTarget;
+    private LinkMode sessionMode = LinkMode.safeDefault();
     private final AtomicBoolean selectingTarget = new AtomicBoolean();
 
     public WindowsGraphLinker(LinkerCallBack callBack) throws AWTException {
@@ -96,10 +97,15 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
 
             this.approvedProfile = approved;
             this.approvedTarget = currentSnapshot();
-            this.moveCoordinator = new WindowsMoveCoordinator(
-                    this.automationTarget, this::recognizeNextVisualFrame);
-            if (!this.moveCoordinator.arm()) {
-                throw new IllegalStateException("无法武装已验证的 Windows 目标");
+            this.sessionMode = connectionMode();
+            if (sessionMode.externalInputAllowed()) {
+                this.moveCoordinator = new WindowsMoveCoordinator(
+                        this.automationTarget, this::recognizeNextVisualFrame);
+                if (!this.moveCoordinator.arm()) {
+                    throw new IllegalStateException("无法武装已验证的 Windows 目标");
+                }
+            } else {
+                this.moveCoordinator = null;
             }
 
             scan();
@@ -153,6 +159,7 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
                                             boolean reversed,
                                             char[][] canonicalPositionBeforeMove,
                                             char[][] visualPositionBeforeMove) {
+        if (!sessionMode.externalInputAllowed()) return false;
         WindowsAutomationTarget targetAdapter = automationTarget;
         WindowsMoveCoordinator coordinator = moveCoordinator;
         ConnectionProfile profile = approvedProfile;
@@ -242,6 +249,7 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
         moveCoordinator = null;
         approvedProfile = null;
         approvedTarget = null;
+        sessionMode = LinkMode.safeDefault();
     }
 
     private void endTargetSelection() {
