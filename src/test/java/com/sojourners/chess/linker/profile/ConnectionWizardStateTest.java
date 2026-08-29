@@ -93,38 +93,21 @@ final class ConnectionWizardStateTest {
     }
 
     @Test
-    void rejectsKnownPublicRankedPlatformTargetsBeforeCalibration() {
-        ConnectionWizardState jjWizard = new ConnectionWizardState();
-        ConnectionWizardState.TargetObservation jjTarget = new ConnectionWizardState.TargetObservation(
-                "windows:pid=77;hwnd=700", 1,
-                "JJGame.exe", "Chrome_WidgetWin_1", "JJ象棋 排位赛",
-                "C:\\Games\\JJ\\JJGame.exe",
-                new BoardCoordinateMapper.ClientArea(10, 20, 960, 720),
-                96, true, true);
+    void genericWindowMetadataNeverSubstitutesForSessionAuthorization() {
+        ConnectionWizardState wizard = new ConnectionWizardState();
+        ConnectionWizardState.TargetObservation ownedWindow =
+                new ConnectionWizardState.TargetObservation(
+                        "windows:pid=77;hwnd=700", 1,
+                        "OwnedBoard.exe", "DesktopWindow", "My local board",
+                        "C:\\OwnedApps\\OwnedBoard.exe",
+                        new BoardCoordinateMapper.ClientArea(10, 20, 960, 720),
+                        96, true, true);
 
-        IllegalArgumentException jjFailure = assertThrows(
-                IllegalArgumentException.class,
-                () -> jjWizard.selectTarget(jjTarget));
+        wizard.selectTarget(ownedWindow);
 
-        assertTrue(jjFailure.getMessage().contains("公共平台"));
-        assertEquals(ConnectionWizardState.Step.TARGET, jjWizard.step());
-        assertFalse(jjWizard.canEnableAutomation());
-
-        ConnectionWizardState tiantianWizard = new ConnectionWizardState();
-        ConnectionWizardState.TargetObservation tiantianTarget = new ConnectionWizardState.TargetObservation(
-                "windows:pid=78;hwnd=701", 1,
-                "天天象棋.exe", "TXGuiFoundation", "中国象棋",
-                "C:\\Games\\Tencent\\天天象棋.exe",
-                new BoardCoordinateMapper.ClientArea(10, 20, 960, 720),
-                96, true, true);
-
-        IllegalArgumentException tiantianFailure = assertThrows(
-                IllegalArgumentException.class,
-                () -> tiantianWizard.selectTarget(tiantianTarget));
-
-        assertTrue(tiantianFailure.getMessage().contains("公共平台"));
-        assertEquals(ConnectionWizardState.Step.TARGET, tiantianWizard.step());
-        assertFalse(tiantianWizard.canEnableAutomation());
+        assertEquals(ConnectionWizardState.Step.BOARD, wizard.step());
+        assertFalse(wizard.canEnableAutomation());
+        assertThrows(IllegalStateException.class, wizard::profile);
     }
 
     @Test

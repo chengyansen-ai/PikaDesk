@@ -63,7 +63,6 @@ public final class ConnectionWizardState {
 
     public void selectTarget(TargetObservation selected) {
         TargetObservation candidate = Objects.requireNonNull(selected, "selected");
-        AutomationTargetPolicy.requirePermitted(candidate);
         target = candidate;
         dryRunVerified = false;
         if (importedTemplate != null && reusableFor(importedTemplate, selected)) {
