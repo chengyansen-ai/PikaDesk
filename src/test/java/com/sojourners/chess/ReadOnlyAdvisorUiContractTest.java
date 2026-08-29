@@ -39,4 +39,16 @@ final class ReadOnlyAdvisorUiContractTest {
         assertTrue(controller.contains("已自动预校准"));
         assertTrue(controller.contains("重新执行识别校准（不点击）"));
     }
+
+    @Test
+    void connectionLifecycleHasItsOwnStatusLabel() throws Exception {
+        String fxml = Files.readString(Path.of(
+                "src", "main", "resources", "fxml", "app.fxml"));
+        String controller = Files.readString(Path.of(
+                "src", "main", "java", "com", "sojourners", "chess",
+                "controller", "Controller.java"));
+
+        assertTrue(fxml.contains("fx:id=\"connectionStatusLabel\""));
+        assertTrue(controller.contains("void connectionStatus(ConnectionStatus status)"));
+    }
 }

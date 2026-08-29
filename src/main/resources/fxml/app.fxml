@@ -219,6 +219,7 @@
                                 </BorderPane>
                                 <ToolBar fx:id="statusToolBar" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="27.0" prefWidth="200.0" style="-fx-pref-height: 27px;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
                                     <items>
+                                        <Label fx:id="connectionStatusLabel" accessibleText="连接当前状态" prefWidth="210.0" text="连接：未连接" wrapText="false" />
                                         <Label fx:id="infoShowLabel" wrapText="true" />
                                         <Label fx:id="timeShowLabel" alignment="CENTER_RIGHT" contentDisplay="RIGHT" textAlignment="RIGHT" wrapText="true" />
                                     </items>

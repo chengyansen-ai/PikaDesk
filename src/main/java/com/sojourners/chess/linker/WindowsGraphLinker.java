@@ -62,6 +62,8 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
         if (!selectingTarget.compareAndSet(true, false)) return;
         try {
             endTargetSelection();
+            publishConnectionStatus(ConnectionStatus.State.CONFIGURING,
+                    "已选中窗口，正在识别并校准棋盘");
 
             long[] getPos = new long[1];
             User32Extra.INSTANCE.GetCursorPos(getPos);
@@ -118,10 +120,13 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
                 this.moveCoordinator = null;
             }
 
+            publishConnectionStatus(ConnectionStatus.State.SYNCHRONIZING,
+                    "校准已通过，正在同步当前局面");
             scan();
 
         } catch (Exception e) {
             onAutomationStopped();
+            publishConnectionStatus(ConnectionStatus.State.STOPPED, "连接未启动");
             String detail = e.getMessage() == null
                     ? e.getClass().getSimpleName() : e.getMessage();
             System.err.println("connection configuration stopped: " + detail);
@@ -214,12 +219,16 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
                     );
             if (!outcome.confirmed()) {
                 System.err.println("automation paused: " + outcome.detail());
+                publishConnectionStatus(ConnectionStatus.State.PAUSED,
+                        "走子确认失败，连接已暂停");
             }
             return outcome.confirmed();
         } catch (RuntimeException failure) {
             coordinator.stop("automation calibration failed: "
                     + (failure.getMessage() == null
                     ? failure.getClass().getSimpleName() : failure.getMessage()));
+            publishConnectionStatus(ConnectionStatus.State.PAUSED,
+                    "校准状态变化，连接已暂停");
             return false;
         }
     }

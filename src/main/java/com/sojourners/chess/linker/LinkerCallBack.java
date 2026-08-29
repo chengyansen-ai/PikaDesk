@@ -30,4 +30,6 @@ public interface LinkerCallBack {
     }
 
     default void connectionConfigurationFailed(String message) { }
+
+    default void connectionStatus(ConnectionStatus status) { }
 }

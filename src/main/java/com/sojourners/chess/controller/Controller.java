@@ -73,6 +73,8 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
     @FXML
     private Label infoShowLabel;
     @FXML
+    private Label connectionStatusLabel;
+    @FXML
     private ToolBar statusToolBar;
     @FXML
     private Label timeShowLabel;
@@ -885,7 +887,7 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
         // 右键菜单
         initBoardContextMenu();
         // 状态栏
-        this.infoShowLabel.prefWidthProperty().bind(statusToolBar.widthProperty().subtract(120));
+        this.infoShowLabel.prefWidthProperty().bind(statusToolBar.widthProperty().subtract(330));
         this.timeShowLabel.setText(getTimeStrategyString());
         this.statusToolBar.setVisible(prop.isLinkShowInfo());
     }
@@ -1460,8 +1462,18 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
             String move = board.move(x1, y1, x2, y2);
             if (move != null) {
                 goCallBack(move);
+                connectionStatus(ConnectionStatus.of(
+                        ConnectionStatus.State.MOVE_SYNCED,
+                        "走子已同步，建议已更新"));
             }
         });
+    }
+
+    @Override
+    public void connectionStatus(ConnectionStatus status) {
+        if (status == null) return;
+        Platform.runLater(() -> connectionStatusLabel.setText(
+                "连接：" + status.message()));
     }
 
     @Override

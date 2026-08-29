@@ -46,6 +46,8 @@ public abstract class AbstractGraphLinker implements GraphLinker, Runnable {
 
     private volatile RecognitionResult lastRecognitionResult;
 
+    private volatile ConnectionStatus lastConnectionStatus = ConnectionStatus.idle();
+
     private LinkerCallBack callBack;
 
     private Robot robot;
@@ -74,6 +76,8 @@ public abstract class AbstractGraphLinker implements GraphLinker, Runnable {
     public void start() {
         recognitionTracker.reset();
         lastRecognitionResult = null;
+        publishConnectionStatus(ConnectionStatus.State.SELECTING_TARGET,
+                "请单击要识别的本地棋盘窗口");
         getTargetWindowId();
     }
 
@@ -173,10 +177,14 @@ public abstract class AbstractGraphLinker implements GraphLinker, Runnable {
                                     action.x1, action.y1, action.x2, action.y2,
                                     isReverse, board2, visualBoard)) {
                                 pause = true;
+                                publishConnectionStatus(ConnectionStatus.State.PAUSED,
+                                        "走子确认失败，连接已暂停");
                                 continue;
                             }
 
                         } else if (action.flag == 3) {
+                            publishConnectionStatus(ConnectionStatus.State.SYNCHRONIZING,
+                                    "检测到新棋局，正在重新同步");
                             break;
                         }
                         if (action.flag == 4) {
@@ -523,6 +531,8 @@ public abstract class AbstractGraphLinker implements GraphLinker, Runnable {
         fenCode = ChessBoard.fenCode(board2, redGo);
         // 回调，初始化棋盘
         callBack.linkerInitChessBoard(fenCode, isReverse);
+        publishConnectionStatus(ConnectionStatus.State.OBSERVING,
+                "棋盘已同步，正在等待走子");
         return true;
     }
 
@@ -535,6 +545,7 @@ public abstract class AbstractGraphLinker implements GraphLinker, Runnable {
         if (thread != null && thread.isAlive()) {
             thread.interrupt();
         }
+        publishConnectionStatus(ConnectionStatus.State.STOPPED, "连接已停止");
     }
 
     // find chess board from image
@@ -589,6 +600,14 @@ public abstract class AbstractGraphLinker implements GraphLinker, Runnable {
 
     protected void notifyConnectionConfigurationFailed(String message) {
         callBack.connectionConfigurationFailed(message);
+    }
+
+    protected final void publishConnectionStatus(ConnectionStatus.State state,
+                                                 String message) {
+        ConnectionStatus next = ConnectionStatus.of(state, message);
+        if (next.equals(lastConnectionStatus)) return;
+        lastConnectionStatus = next;
+        callBack.connectionStatus(next);
     }
 
     private void copyBoard(char[][] source, char[][] destination) {
