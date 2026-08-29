@@ -52,6 +52,11 @@
                   <ComboBox fx:id="orientation" prefWidth="130.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="1" />
                   <Label text="主题" GridPane.columnIndex="3" GridPane.rowIndex="1" />
                   <ComboBox fx:id="themeId" prefWidth="120.0" GridPane.columnIndex="4" GridPane.columnSpan="2" GridPane.rowIndex="1" />
+                  <Button text="截图标定棋盘…" onAction="#calibrateButtonClick"
+                          GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="2" />
+                  <Label text="自动识别失败时用：截屏后依次点击棋盘左上、右下两个交叉点"
+                         style="-fx-text-fill: #888888;" wrapText="true"
+                         GridPane.columnIndex="2" GridPane.rowIndex="2" GridPane.columnSpan="6" />
                </children>
             </GridPane>
          </content>

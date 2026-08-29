@@ -18,6 +18,12 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputControl;
 import javafx.stage.FileChooser;
 
+import java.awt.AWTException;
+import java.awt.GraphicsEnvironment;
+import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -137,6 +143,62 @@ public class LinkSettingController {
             verificationLabel.setText("干运行未通过：" + message(failure));
             updateControls();
             DialogUtils.showErrorDialog("连接配置无效", message(failure));
+        }
+    }
+
+    @FXML
+    void calibrateButtonClick(ActionEvent event) {
+        if (wizard == null || wizard.target() == null) {
+            DialogUtils.showWarningDialog("尚未选择窗口",
+                    "请关闭此窗口，点击主界面的“连线”，再用准星选择目标窗口。");
+            return;
+        }
+        if (!DialogUtils.showConfirmDialog("截图标定棋盘",
+                "请先将目标窗口完整置于屏幕最前（副屏窗口请先拖回主屏）。\n"
+                        + "点击确定后，本窗口将临时隐藏并截取全屏，然后在截图中依次点击"
+                        + "棋盘最左上角与最右下角的交叉点。")) {
+            return;
+        }
+        BoardCoordinateMapper.ClientArea client = wizard.target().clientArea();
+        double scaling = screenScalingFactor();
+        App.hideLinkSetting();
+        try {
+            pauseBriefly();
+            BufferedImage snapshot = captureFullScreen();
+            App.openCalibrationDialog(snapshot, client, scaling, this::applyCalibratedBounds);
+        } catch (AWTException failure) {
+            DialogUtils.showErrorDialog("截屏失败", "无法访问屏幕："
+                    + message(failure));
+        } finally {
+            App.showLinkSetting();
+        }
+    }
+
+    private void applyCalibratedBounds(BoardCoordinateMapper.BoardBounds bounds) {
+        boardX.setText(String.valueOf(bounds.x()));
+        boardY.setText(String.valueOf(bounds.y()));
+        boardWidth.setText(String.valueOf(bounds.width()));
+        boardHeight.setText(String.valueOf(bounds.height()));
+        verificationLabel.setText("已从截图标定棋盘边界；请核对坐标后执行坐标干运行（不点击）。");
+        stepLabel.setText("2/5 已从截图填入棋盘边界 · 请执行干运行");
+    }
+
+    private static double screenScalingFactor() {
+        return GraphicsEnvironment.getLocalGraphicsEnvironment()
+                .getDefaultScreenDevice().getDefaultConfiguration()
+                .getDefaultTransform().getScaleX();
+    }
+
+    private static BufferedImage captureFullScreen() throws AWTException {
+        Rectangle screen = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
+        return new Robot().createScreenCapture(screen);
+    }
+
+    private static void pauseBriefly() {
+        try {
+            Thread.sleep(350);
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
         }
     }
 

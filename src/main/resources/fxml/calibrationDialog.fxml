@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox prefWidth="760.0" spacing="12.0"
+      xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.sojourners.chess.calibration.CalibrationDialogController">
+   <padding><Insets bottom="16.0" left="18.0" right="18.0" top="16.0" /></padding>
+   <children>
+      <Label fx:id="hintLabel" text="截图标定棋盘" wrapText="true" />
+      <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
+         <content>
+            <StackPane alignment="TOP_CENTER">
+               <ImageView fx:id="snapshotView" fitWidth="720.0" preserveRatio="true"
+                          onMouseClicked="#snapshotClicked" />
+               <Pane fx:id="overlayPane" mouseTransparent="true" />
+            </StackPane>
+         </content>
+      </ScrollPane>
+      <Label fx:id="detailLabel" text="第 1 步：点击棋盘最左上角的交叉点" wrapText="true" />
+      <HBox alignment="CENTER_RIGHT" spacing="8.0">
+         <children>
+            <Button fx:id="undoButton" text="撤销" onAction="#undoClick" disable="true" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Button text="取消" cancelButton="true" onAction="#cancelClick" />
+            <Button fx:id="applyButton" text="填入向导" defaultButton="true"
+                    disable="true" onAction="#applyClick" />
+         </children>
+      </HBox>
+   </children>
+</VBox>

@@ -1,5 +1,7 @@
 package com.sojourners.chess;
 
+import com.sojourners.chess.automation.BoardCoordinateMapper;
+import com.sojourners.chess.calibration.CalibrationDialogController;
 import com.sojourners.chess.config.Properties;
 import com.sojourners.chess.controller.ColorSettingController;
 import com.sojourners.chess.controller.Controller;
@@ -21,7 +23,9 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 
+import java.awt.image.BufferedImage;
 import java.net.URL;
+import java.util.function.Consumer;
 
 /**
  * 主窗口
@@ -193,6 +197,54 @@ public class App extends Application {
     }
     public static void closeLinkSetting() {
         linkSetting.close();
+    }
+
+    /**
+     * Temporarily hides the link-setting stage so a full-screen snapshot can be
+     * taken while the target window is visible. Call showLinkSetting to restore.
+     */
+    public static void hideLinkSetting() {
+        if (linkSetting != null && linkSetting.isShowing()) {
+            linkSetting.hide();
+        }
+    }
+
+    public static void showLinkSetting() {
+        if (linkSetting != null && !linkSetting.isShowing()) {
+            linkSetting.show();
+        }
+    }
+
+    /**
+     * Opens the visual board calibration dialog. The caller supplies a
+     * full-screen snapshot taken while the target window was in front, the
+     * selected target's client area, and the AWT screen scaling factor.
+     * The callback receives the calibrated client-relative board bounds.
+     */
+    public static void openCalibrationDialog(
+            BufferedImage snapshot,
+            BoardCoordinateMapper.ClientArea client,
+            double screenScalingFactor,
+            Consumer<BoardCoordinateMapper.BoardBounds> onApplied) {
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(App.class.getResource("/fxml/calibrationDialog.fxml"));
+            Parent pane = loader.load();
+            Scene scene = new Scene(pane);
+            applyTheme(scene);
+            Stage stage = new Stage();
+            stage.setScene(scene);
+            stage.setTitle("截图标定棋盘");
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.initOwner(mainStage);
+            stage.setMinWidth(760);
+            CalibrationDialogController controller = loader.getController();
+            controller.setSnapshot(snapshot, client, screenScalingFactor, onApplied);
+            controller.renderSnapshot();
+            stage.showAndWait();
+        } catch (Exception failure) {
+            failure.printStackTrace();
+        }
     }
 
     public static String openEditChessBoard(char[][] board, boolean redGo, boolean isReverse) {
