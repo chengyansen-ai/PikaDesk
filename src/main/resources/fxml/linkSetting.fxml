@@ -11,7 +11,7 @@
    <children>
       <Label text="本地棋盘连接向导" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
       <Label fx:id="stepLabel" text="1/5 选择窗口" style="-fx-font-size: 14px; -fx-font-weight: bold;" />
-      <Label text="只支持本地、离线或明确授权的棋盘。完成校准和干运行前，底层不会武装自动点击。"
+      <Label text="只支持本地、离线或明确授权的棋盘。只读陪练只截图、识别和分析，不会武装外部输入。"
              wrapText="true" />
       <Label text="识别兼容性：当前仅开放已在本地测试棋盘完成实机验证的 CLASSIC + yolo11-xiangqi 组合。"
              wrapText="true" />
@@ -68,16 +68,16 @@
                   <TextField fx:id="linkScanTime" prefWidth="85.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                   <Label text="识别线程" GridPane.columnIndex="2" GridPane.rowIndex="1" />
                   <TextField fx:id="linkThreadNum" prefWidth="70.0" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-                  <Label text="点击间隔(ms)" GridPane.columnIndex="4" GridPane.rowIndex="1" />
+                  <Label text="点击间隔(ms，仅自动)" GridPane.columnIndex="4" GridPane.rowIndex="1" />
                   <TextField fx:id="mouseClickDelay" prefWidth="70.0" GridPane.columnIndex="5" GridPane.rowIndex="1" />
-                  <Label text="走子间隔(ms)" GridPane.columnIndex="6" GridPane.rowIndex="1" />
+                  <Label text="走子间隔(ms，仅自动)" GridPane.columnIndex="6" GridPane.rowIndex="1" />
                   <TextField fx:id="mouseMoveDelay" prefWidth="70.0" GridPane.columnIndex="7" GridPane.rowIndex="1" />
                </children>
             </GridPane>
          </content>
       </TitledPane>
 
-      <TitledPane text="4-5 · 干运行与授权" expanded="true" collapsible="false" VBox.vgrow="ALWAYS">
+      <TitledPane text="4-5 · 识别校准与授权" expanded="true" collapsible="false" VBox.vgrow="ALWAYS">
          <content>
             <VBox spacing="10.0">
                <padding><Insets bottom="12.0" left="12.0" right="12.0" top="12.0" /></padding>

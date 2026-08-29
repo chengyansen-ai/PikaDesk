@@ -3,6 +3,7 @@ package com.sojourners.chess.controller;
 import com.sojourners.chess.App;
 import com.sojourners.chess.automation.BoardCoordinateMapper;
 import com.sojourners.chess.config.Properties;
+import com.sojourners.chess.linker.LinkMode;
 import com.sojourners.chess.linker.profile.ConnectionProfile;
 import com.sojourners.chess.linker.profile.ConnectionWizardState;
 import com.sojourners.chess.linker.profile.RecognitionCompatibility;
@@ -116,11 +117,19 @@ public class LinkSettingController {
                     number(mouseMoveDelay, "走子间隔"));
             BoardCoordinateMapper.MovePoints points = wizard.verifyDryRun(
                     wizard.target(), new BoardCoordinateMapper.Move(0, 0, 0, 1));
-            verificationLabel.setText("干运行通过：a0 → a1 映射为 ("
-                    + points.from().x() + ", " + points.from().y() + ") → ("
-                    + points.to().x() + ", " + points.to().y()
-                    + ")；未发送任何鼠标事件。请核对坐标后勾选授权。");
-            stepLabel.setText("5/5 已验证 · 等待明确授权");
+            if (readOnlyMode()) {
+                verificationLabel.setText("只读校准通过：棋盘 a0 → a1 对应 ("
+                        + points.from().x() + ", " + points.from().y() + ") → ("
+                        + points.to().x() + ", " + points.to().y()
+                        + ")；本次连接不会创建或武装外部输入能力。");
+                stepLabel.setText("5/5 已验证 · 等待启动只读陪练");
+            } else {
+                verificationLabel.setText("干运行通过：a0 → a1 映射为 ("
+                        + points.from().x() + ", " + points.from().y() + ") → ("
+                        + points.to().x() + ", " + points.to().y()
+                        + ")；未发送任何鼠标事件。请核对坐标后勾选授权。");
+                stepLabel.setText("5/5 已验证 · 等待明确授权");
+            }
             verifiedFieldsDirty = false;
             updateControls();
         } catch (RuntimeException failure) {
@@ -236,7 +245,9 @@ public class LinkSettingController {
         }
         stepLabel.setText(wizard.boardBounds() == null
                 ? "2/5 需要填写棋盘边界" : "4/5 请核对并执行干运行");
-        verificationLabel.setText("自动点击仍为关闭状态。干运行只计算两个落点，不会点击窗口。");
+        verificationLabel.setText(readOnlyMode()
+                ? "只读陪练只会截图识别、同步棋谱并显示引擎候选；不会向目标窗口发送输入。"
+                : "自动点击仍为关闭状态。干运行只计算两个落点，不会点击窗口。");
         verifiedFieldsDirty = false;
         updateControls();
     }
@@ -253,7 +264,9 @@ public class LinkSettingController {
         boolean hasTarget = wizard != null && wizard.target() != null;
         dryRunButton.setDisable(!hasTarget);
         boolean ready = hasTarget && wizard.canEnableAutomation() && !verifiedFieldsDirty;
-        completeButton.setText(hasTarget ? "完成并允许本次连接" : "保存参数");
+        completeButton.setText(hasTarget
+                ? readOnlyMode() ? "启动只读陪练" : "完成并允许本次连接"
+                : "保存参数");
         completeButton.setDisable(hasTarget && (!ready || !localAuthorization.isSelected()));
         exportRedactedButton.setDisable(!ready);
         exportLocalButton.setDisable(!ready);
@@ -261,6 +274,11 @@ public class LinkSettingController {
 
     private void watchVerifiedField(TextInputControl field) {
         field.textProperty().addListener((observable, oldValue, newValue) -> markDirty());
+    }
+
+    private boolean readOnlyMode() {
+        return wizard != null
+                && wizard.connectionMode() == LinkMode.READ_ONLY_ADVISOR;
     }
 
     private void markDirty() {
