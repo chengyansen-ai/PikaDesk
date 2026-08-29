@@ -51,4 +51,18 @@ final class ReadOnlyAdvisorUiContractTest {
         assertTrue(fxml.contains("fx:id=\"connectionStatusLabel\""));
         assertTrue(controller.contains("void connectionStatus(ConnectionStatus status)"));
     }
+
+    @Test
+    void genericWindowChooserKeepsTheCrosshairFallback() throws Exception {
+        String controller = Files.readString(Path.of(
+                "src", "main", "java", "com", "sojourners", "chess",
+                "controller", "Controller.java"));
+        String windowsLinker = Files.readString(Path.of(
+                "src", "main", "java", "com", "sojourners", "chess",
+                "linker", "WindowsGraphLinker.java"));
+
+        assertTrue(controller.contains("ChoiceDialog<TargetWindowChoice>"));
+        assertTrue(windowsLinker.contains("TargetWindowSelectionSession"));
+        assertTrue(windowsLinker.contains("crosshairFallback()"));
+    }
 }

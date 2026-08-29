@@ -3,6 +3,8 @@ package com.sojourners.chess.linker;
 import com.sojourners.chess.linker.profile.ConnectionProfile;
 import com.sojourners.chess.linker.profile.ConnectionWizardState;
 
+import java.util.List;
+
 public interface LinkerCallBack {
 
     void linkerInitChessBoard(String fenCode, boolean isReverse);
@@ -20,6 +22,11 @@ public interface LinkerCallBack {
     }
 
     void linkerMove(int x1, int y1, int x2, int y2);
+
+    /** Lets the user choose one generic visible target for this session. */
+    default TargetWindowChoice chooseTargetWindow(List<TargetWindowChoice> choices) {
+        return null;
+    }
 
     /**
      * Requests explicit approval for one selected local window. Returning

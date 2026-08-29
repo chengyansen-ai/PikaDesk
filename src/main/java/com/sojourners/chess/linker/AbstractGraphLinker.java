@@ -77,7 +77,7 @@ public abstract class AbstractGraphLinker implements GraphLinker, Runnable {
         recognitionTracker.reset();
         lastRecognitionResult = null;
         publishConnectionStatus(ConnectionStatus.State.SELECTING_TARGET,
-                "请单击要识别的本地棋盘窗口");
+                "请选择要识别的本地棋盘窗口");
         getTargetWindowId();
     }
 
@@ -596,6 +596,11 @@ public abstract class AbstractGraphLinker implements GraphLinker, Runnable {
     protected ConnectionProfile requestConnectionConfiguration(
             ConnectionWizardState wizard) {
         return callBack.configureConnection(wizard);
+    }
+
+    protected TargetWindowChoice requestTargetWindowSelection(
+            List<TargetWindowChoice> choices) {
+        return callBack.chooseTargetWindow(List.copyOf(choices));
     }
 
     protected void notifyConnectionConfigurationFailed(String message) {

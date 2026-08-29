@@ -11,6 +11,7 @@ import com.sojourners.chess.util.PathUtils;
 import com.sojourners.chess.yolo.OnnxModel;
 import com.sun.jna.Memory;
 import com.sun.jna.Native;
+import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.*;
 import com.sun.jna.ptr.IntByReference;
 
@@ -32,10 +33,12 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
     private BoardCoordinateMapper.TargetSnapshot approvedTarget;
     private LinkMode sessionMode = LinkMode.safeDefault();
     private final AtomicBoolean selectingTarget = new AtomicBoolean();
+    private final WindowsWindowCatalog windowCatalog;
 
     public WindowsGraphLinker(LinkerCallBack callBack) throws AWTException {
         super(callBack);
         this.listener = new GlobalMouseListener(this);
+        this.windowCatalog = new WindowsWindowCatalog();
         // 分辨率缩放系数
         this.screenScalingFactor = getScreenScalingFactor();
     }
@@ -46,12 +49,33 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
             notifyConnectionConfigurationFailed("已经在等待选择目标窗口");
             return;
         }
+        boolean nativeHookStarted = false;
         try {
+            TargetWindowSelectionSession selectionSession = windowCatalog.scan(
+                    ProcessHandle.current().pid());
+            TargetWindowChoice selected = requestTargetWindowSelection(
+                    selectionSession.choices());
+            if (selected == null) {
+                selectingTarget.set(false);
+                publishConnectionStatus(ConnectionStatus.State.STOPPED,
+                        "窗口选择已取消");
+                notifyConnectionConfigurationFailed("窗口选择已取消");
+                return;
+            }
+            TargetWindowSelectionSession.Resolution resolution =
+                    selectionSession.resolve(selected);
+            if (!resolution.crosshairFallback()) {
+                selectingTarget.set(false);
+                configureSelectedWindow(new WinDef.HWND(
+                        Pointer.createConstant(resolution.nativeHandle())));
+                return;
+            }
             this.listener.startListenMouse();
+            nativeHookStarted = true;
             selectCursor();
         } catch (Exception e) {
             selectingTarget.set(false);
-            endTargetSelection();
+            if (nativeHookStarted) endTargetSelection();
             String detail = e.getMessage() == null
                     ? e.getClass().getSimpleName() : e.getMessage();
             notifyConnectionConfigurationFailed("无法开始窗口选择：" + detail);
@@ -60,18 +84,28 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
     @Override
     public void mouseClick() {
         if (!selectingTarget.compareAndSet(true, false)) return;
+        endTargetSelection();
+        long[] getPos = new long[1];
+        User32Extra.INSTANCE.GetCursorPos(getPos);
+        configureSelectedWindow(User32Extra.INSTANCE.WindowFromPoint(getPos[0]));
+    }
+
+    private void configureSelectedWindow(WinDef.HWND selectedWindow) {
         try {
-            endTargetSelection();
             publishConnectionStatus(ConnectionStatus.State.CONFIGURING,
                     "已选中窗口，正在识别并校准棋盘");
 
-            long[] getPos = new long[1];
-            User32Extra.INSTANCE.GetCursorPos(getPos);
-            this.hwnd = User32Extra.INSTANCE.WindowFromPoint(getPos[0]);
+            this.hwnd = selectedWindow;
+            if (this.hwnd == null || this.hwnd.getPointer() == null
+                    || Pointer.nativeValue(this.hwnd.getPointer()) == 0) {
+                throw new IllegalStateException("目标窗口已经不存在");
+            }
             WinDef.HWND rootWindow = User32.INSTANCE.GetAncestor(this.hwnd, 2);
-            if (rootWindow != null) {
+            if (rootWindow != null && rootWindow.getPointer() != null
+                    && Pointer.nativeValue(rootWindow.getPointer()) != 0) {
                 this.hwnd = rootWindow;
             }
+            rejectOwnProcess(this.hwnd);
 
             this.needScaling = needScaling(this.hwnd);
 
@@ -132,7 +166,15 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
             System.err.println("connection configuration stopped: " + detail);
             notifyConnectionConfigurationFailed(detail);
         }
+    }
 
+    private void rejectOwnProcess(WinDef.HWND selectedWindow) {
+        IntByReference processId = new IntByReference();
+        User32.INSTANCE.GetWindowThreadProcessId(selectedWindow, processId);
+        if (Integer.toUnsignedLong(processId.getValue())
+                == ProcessHandle.current().pid()) {
+            throw new IllegalStateException("不能把 PikaDesk 自身作为目标窗口");
+        }
     }
 
     private boolean needScaling(WinDef.HWND hwnd) {

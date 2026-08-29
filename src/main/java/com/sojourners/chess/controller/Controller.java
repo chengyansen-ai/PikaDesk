@@ -1470,6 +1470,39 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
     }
 
     @Override
+    public TargetWindowChoice chooseTargetWindow(List<TargetWindowChoice> choices) {
+        if (choices == null || choices.isEmpty()) return null;
+        if (Platform.isFxApplicationThread()) {
+            return showTargetWindowChooser(choices);
+        }
+        FutureTask<TargetWindowChoice> dialog = new FutureTask<>(
+                () -> showTargetWindowChooser(choices));
+        Platform.runLater(dialog);
+        try {
+            return dialog.get();
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+            return null;
+        } catch (ExecutionException failure) {
+            throw new IllegalStateException("无法打开目标窗口选择器", failure.getCause());
+        }
+    }
+
+    private TargetWindowChoice showTargetWindowChooser(
+            List<TargetWindowChoice> choices) {
+        TargetWindowChoice initial = choices.size() > 1
+                ? choices.get(1) : choices.getFirst();
+        ChoiceDialog<TargetWindowChoice> dialog =
+                new ChoiceDialog<>(initial, choices);
+        dialog.initOwner(App.getMainStage());
+        dialog.setTitle("选择本地棋盘窗口");
+        dialog.setHeaderText("请选择你拥有或已获得明确授权的窗口");
+        dialog.setContentText("目标窗口：");
+        dialog.getDialogPane().setPrefWidth(760);
+        return dialog.showAndWait().orElse(null);
+    }
+
+    @Override
     public void connectionStatus(ConnectionStatus status) {
         if (status == null) return;
         Platform.runLater(() -> connectionStatusLabel.setText(
