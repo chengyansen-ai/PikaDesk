@@ -1,5 +1,7 @@
 package com.sojourners.chess.media;
 
+import com.sun.jna.Platform;
+
 import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -27,6 +29,16 @@ public final class LocalVoiceService implements AutoCloseable {
             new AtomicReference<>("");
     private final CountDownLatch stopped = new CountDownLatch(1);
     private final Thread worker;
+
+    public static LocalVoiceService createForCurrentPlatform() {
+        BackendFactory factory = Platform.isWindows()
+                ? WindowsSapiVoiceBackend::new
+                : () -> {
+                    throw new UnsupportedOperationException(
+                            "Local speech is only available on Windows");
+                };
+        return new LocalVoiceService(factory);
+    }
 
     LocalVoiceService(BackendFactory backendFactory) {
         this.backendFactory = Objects.requireNonNull(
