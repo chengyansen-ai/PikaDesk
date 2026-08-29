@@ -62,6 +62,26 @@ final class GraphLinkerCharacterizationTest {
     }
 
     @Test
+    void readOnlyAdvisorSynchronizesEitherPieceColorFromTheObservedBoard() {
+        char[][] beforeRed = emptyBoard();
+        beforeRed[9][0] = 'R';
+        char[][] afterRed = copy(beforeRed);
+        afterRed[9][0] = ' ';
+        afterRed[8][0] = 'R';
+
+        char[][] beforeBlack = emptyBoard();
+        beforeBlack[0][0] = 'r';
+        char[][] afterBlack = copy(beforeBlack);
+        afterBlack[0][0] = ' ';
+        afterBlack[1][0] = 'r';
+
+        assertAction(AbstractGraphLinker.compareBoard(afterRed, beforeRed, false, true),
+                1, 0, 9, 0, 8);
+        assertAction(AbstractGraphLinker.compareBoard(afterBlack, beforeBlack, true, true),
+                1, 0, 0, 0, 1);
+    }
+
+    @Test
     void distinguishesANewGameFromAnUncertainMultiSquareChange() {
         char[][] engineBoard = emptyBoard();
         char[][] newGameBoard = emptyBoard();

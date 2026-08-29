@@ -495,31 +495,10 @@ public abstract class AbstractGraphLinker implements GraphLinker, Runnable {
         return true;
     }
     private boolean reverse(char[][] board) throws Exception {
-        // 是否翻转
-        int rowRedKing = -1, rowBlackKing = -1;
-        for (int i = 0; i < 10; i++) {
-            for (int j = 3; j < 6; j++) {
-                if (board[i][j] == 'k') {
-                    rowBlackKing = i;
-                } else if (board[i][j] == 'K') {
-                    rowRedKing = i;
-                }
-            }
-        }
-        if (rowBlackKing == -1 && rowRedKing == -1) {
-            throw new Exception("find king failed.");
-        }
-        boolean isReverse = rowRedKing >= 0 && rowRedKing <= 2 || rowBlackKing >= 7 && rowBlackKing <= 9;
-        if (isReverse) {
-            for (int i = 0; i < 5; i++) {
-                for (int j = 0; j < 9; j++) {
-                    char tmp = board[i][j];
-                    board[i][j] = board[9 - i][8 - j];
-                    board[9 - i][8 - j] = tmp;
-                }
-            }
-        }
-        return isReverse;
+        ObservedBoardOrientation.Position position =
+                ObservedBoardOrientation.normalize(board);
+        copyBoard(position.boardCopy(), board);
+        return position.reversed();
     }
 
     /**
