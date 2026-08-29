@@ -1436,16 +1436,17 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
     @Override
     public void linkerMove(int x1, int y1, int x2, int y2) {
         Platform.runLater(() -> {
+            if (isWatchMode()) {
+                ObservedTurnAlignment alignment = ObservedTurnAlignment.fromMove(
+                        redGo, board.getBoard()[y1][x1]);
+                if (alignment.corrected()) {
+                    engineStop();
+                    redGo = alignment.moverRed();
+                }
+            }
             String move = board.move(x1, y1, x2, y2);
             if (move != null) {
-                boolean red = XiangqiUtils.isRed(board.getBoard()[y2][x2]);
-                if (isWatchMode() && (!redGo && red || redGo && !red)) {
-                    System.out.println(move + "," + red + ", " + redGo);
-                    // 连线识别行棋方错误，自动切换行棋方
-                    switchPlayer(false);
-                } else {
-                    goCallBack(move);
-                }
+                goCallBack(move);
             }
         });
     }
