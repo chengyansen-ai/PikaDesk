@@ -429,6 +429,8 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
         analysisButton.setDisable(false);
         robotAnalysis.setValue(false);
 
+        immediateButton.setDisable(false);
+
         linkMode.setValue(false);
     }
 

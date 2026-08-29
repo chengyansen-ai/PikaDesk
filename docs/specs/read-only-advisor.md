@@ -17,7 +17,7 @@
 
 ```powershell
 $env:JAVA_HOME = 'C:\path\to\jdk-21'
-.\mvnw.cmd --batch-mode -Dtest=ReadOnlyAdvisorModeTest,GraphLinkerCharacterizationTest test
+.\mvnw.cmd --batch-mode '-Dtest=LinkModeTest,GraphLinkerCharacterizationTest,ObservedBoardOrientationTest,ObservedTurnAlignmentTest,ReadOnlyAdvisorUiContractTest' test
 .\mvnw.cmd --batch-mode verify
 .\scripts\package-windows.ps1
 ```
