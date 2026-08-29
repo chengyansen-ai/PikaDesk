@@ -293,8 +293,45 @@ final class WindowsMoveCoordinatorTest {
         return result;
     }
 
+    @Test
+    void confirmationUsesSnapshotTakenAfterForegroundArrivesDuringExecution() {
+        FakeBridge bridge = new FakeBridge();
+        bridge.window = new WindowsAutomationTarget.WindowObservation(
+                true, 42, 77, CLIENT, 144, false, true);
+        WindowsAutomationTarget target = new WindowsAutomationTarget(
+                HANDLE, bridge, millis -> { }, true);
+        char[][] before = standardBoard();
+        char[][] after = rookA0ToA1(before);
+        RecognitionGate.StabilityTracker stability = stableAt(before);
+        List<RecognitionResult> frames = new ArrayList<>();
+        frames.add(stability.evaluate(candidate(after)));
+        frames.add(stability.evaluate(candidate(after)));
+        AtomicLong clock = new AtomicLong(1_000_000_000L);
+        WindowsMoveCoordinator coordinator = new WindowsMoveCoordinator(
+                target,
+                () -> frames.removeFirst(),
+                () -> clock.getAndAdd(10_000_000L),
+                millis -> { }
+        );
+
+        assertTrue(coordinator.arm());
+        WindowsMoveCoordinator.ExecutionOutcome outcome = coordinator.executeAndConfirm(
+                calibration(target), before, before,
+                new BoardCoordinateMapper.Move(0, 0, 0, 1),
+                new MoveConfirmationTracker.GridMove(0, 9, 0, 8),
+                0, 0, 500);
+
+        assertAll(
+                () -> assertTrue(outcome.confirmed(),
+                        "confirmation must use the post-execution snapshot "
+                                + "(window becomes focused during the click)"),
+                () -> assertEquals(MoveConfirmationTracker.Status.CONFIRMED,
+                        outcome.confirmationStatus().orElseThrow())
+        );
+    }
+
     private static final class FakeBridge implements WindowsAutomationTarget.NativeBridge {
-        private final WindowsAutomationTarget.WindowObservation window =
+        private WindowsAutomationTarget.WindowObservation window =
                 new WindowsAutomationTarget.WindowObservation(
                         true, 42, 77, CLIENT, 144, true, true);
         private final List<WindowsAutomationTarget.MouseEvent> events = new ArrayList<>();
@@ -328,6 +365,8 @@ final class WindowsMoveCoordinatorTest {
 
         @Override
         public boolean ensureForeground(WinDef.HWND handle) {
+            window = new WindowsAutomationTarget.WindowObservation(
+                    true, 42, 77, CLIENT, 144, true, true);
             return true;
         }
     }

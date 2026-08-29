@@ -102,13 +102,22 @@ public final class WindowsMoveCoordinator {
         }
 
         long confirmationStarted = clock.nanoTime();
+        // Snapshot the target AFTER execution: the hardware path brings the
+        // window to the foreground during executeOne, so the pre-execution
+        // snapshot may still report unfocused and the confirmation tracker
+        // would reject it before observing a single frame.
+        Optional<BoardCoordinateMapper.TargetSnapshot> confirmedTarget = target.currentTarget();
+        if (confirmedTarget.isEmpty()) {
+            kernel.validationFailed("selected target disappeared after execution");
+            return rejected(kernel.lastReason().orElseThrow());
+        }
         MoveConfirmationTracker confirmation;
         try {
             confirmation = new MoveConfirmationTracker(
                     kernel,
                     visualPositionBeforeMove,
                     visualMove,
-                    expectedTarget.orElseThrow(),
+                    confirmedTarget.orElseThrow(),
                     confirmationStarted,
                     confirmationTimeoutMillis
             );

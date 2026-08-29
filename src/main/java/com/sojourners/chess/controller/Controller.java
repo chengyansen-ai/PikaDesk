@@ -1587,8 +1587,20 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
         if (status.state() == ConnectionStatus.State.PAUSED) {
             announceWarning(status.message());
         }
-        Platform.runLater(() -> connectionStatusLabel.setText(
-                "连接：" + status.message()));
+        String fullText = "连接：" + status.message();
+        Platform.runLater(() -> {
+            connectionStatusLabel.setText(fullText);
+            connectionStatusLabel.setTooltip(new Tooltip(fullText));
+        });
+    }
+
+    /** Shows the full connection status text on demand (status bar truncates). */
+    @FXML
+    public void connectionStatusClicked(javafx.scene.input.MouseEvent event) {
+        String fullText = connectionStatusLabel.getText();
+        if (fullText != null && !fullText.isBlank()) {
+            DialogUtils.showInfoDialog("连接状态", fullText);
+        }
     }
 
     @Override
