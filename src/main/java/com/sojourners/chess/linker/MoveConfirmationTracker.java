@@ -73,9 +73,10 @@ public final class MoveConfirmationTracker {
             return fail(Status.TARGET_CHANGED,
                     "safety state changed during confirmation", elapsedMillis, recognition);
         }
-        if (!expectedTarget.equals(currentTarget)) {
+        if (targetGeometryChanged(expectedTarget, currentTarget)) {
             return fail(Status.TARGET_CHANGED,
-                    "target identity, geometry, DPI, focus, or visibility changed",
+                    "target changed during confirmation: "
+                            + targetChangeDetail(expectedTarget, currentTarget),
                     elapsedMillis, recognition);
         }
         if (elapsedNanos >= timeoutNanos) {
@@ -114,6 +115,41 @@ public final class MoveConfirmationTracker {
 
     public synchronized Optional<ConfirmationEvent> lastEvent() {
         return Optional.ofNullable(lastEvent);
+    }
+
+    /**
+     * Confirmation only reads the board; focus is irrelevant after the click
+     * pair has been delivered, so focus changes do not abort confirmation.
+     * Identity, geometry, DPI, and visibility changes still fail closed.
+     */
+    private boolean targetGeometryChanged(BoardCoordinateMapper.TargetSnapshot expected,
+                                          BoardCoordinateMapper.TargetSnapshot current) {
+        return !expected.targetId().equals(current.targetId())
+                || expected.targetRevision() != current.targetRevision()
+                || !expected.clientArea().equals(current.clientArea())
+                || expected.dpi() != current.dpi()
+                || expected.visible() != current.visible();
+    }
+
+    private String targetChangeDetail(BoardCoordinateMapper.TargetSnapshot expected,
+                                      BoardCoordinateMapper.TargetSnapshot current) {
+        java.util.List<String> changes = new java.util.ArrayList<>();
+        if (!expected.targetId().equals(current.targetId())) {
+            changes.add("targetId");
+        }
+        if (expected.targetRevision() != current.targetRevision()) {
+            changes.add("revision");
+        }
+        if (!expected.clientArea().equals(current.clientArea())) {
+            changes.add("clientArea");
+        }
+        if (expected.dpi() != current.dpi()) {
+            changes.add("dpi");
+        }
+        if (expected.visible() != current.visible()) {
+            changes.add("visible");
+        }
+        return String.join(",", changes);
     }
 
     private Outcome waiting(String detail,

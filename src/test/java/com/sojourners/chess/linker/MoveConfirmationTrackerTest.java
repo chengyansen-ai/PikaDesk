@@ -101,7 +101,7 @@ final class MoveConfirmationTrackerTest {
     }
 
     @Test
-    void movingOrUnfocusingTheTargetFailsConfirmationImmediately() {
+    void geometryChangeFailsConfirmationButFocusChangeIsIgnored() {
         char[][] before = standardBoard();
         AutomationSafetyKernel movedKernel = confirmingKernel();
         MoveConfirmationTracker movedTracker = tracker(movedKernel, before);
@@ -109,24 +109,43 @@ final class MoveConfirmationTrackerTest {
                 TARGET.targetId(), TARGET.targetRevision(),
                 new BoardCoordinateMapper.ClientArea(101, 200, 1_000, 800),
                 144, true, true);
-        AutomationSafetyKernel unfocusedKernel = confirmingKernel();
-        MoveConfirmationTracker unfocusedTracker = tracker(unfocusedKernel, before);
-        BoardCoordinateMapper.TargetSnapshot unfocused = new BoardCoordinateMapper.TargetSnapshot(
-                TARGET.targetId(), TARGET.targetRevision(), TARGET.clientArea(),
-                144, false, true);
 
         MoveConfirmationTracker.Outcome movedOutcome = movedTracker.observe(
                 START_NANOS + 1, moved, accepted(before));
-        MoveConfirmationTracker.Outcome unfocusedOutcome = unfocusedTracker.observe(
-                START_NANOS + 1, unfocused, accepted(before));
 
         assertAll(
                 () -> assertEquals(MoveConfirmationTracker.Status.TARGET_CHANGED,
                         movedOutcome.status()),
-                () -> assertEquals(MoveConfirmationTracker.Status.TARGET_CHANGED,
-                        unfocusedOutcome.status()),
-                () -> assertEquals(AutomationState.PAUSED, movedKernel.state()),
-                () -> assertEquals(AutomationState.PAUSED, unfocusedKernel.state())
+                () -> assertTrue(movedOutcome.detail().contains("clientArea")),
+                () -> assertEquals(AutomationState.PAUSED, movedKernel.state())
+        );
+    }
+
+    @Test
+    void focusLossDuringConfirmationStillAllowsConfirmedOutcome() {
+        char[][] before = standardBoard();
+        char[][] after = rookA0ToA1(before);
+        AutomationSafetyKernel kernel = confirmingKernel();
+        MoveConfirmationTracker tracker = tracker(kernel, before);
+        RecognitionGate.StabilityTracker stability = stableAt(before);
+        BoardCoordinateMapper.TargetSnapshot unfocused = new BoardCoordinateMapper.TargetSnapshot(
+                TARGET.targetId(), TARGET.targetRevision(), TARGET.clientArea(),
+                144, false, true);
+
+        MoveConfirmationTracker.Outcome firstChangedFrame = tracker.observe(
+                START_NANOS + 10_000_000L, unfocused,
+                stability.evaluate(candidate(after)));
+        MoveConfirmationTracker.Outcome stableChangedFrame = tracker.observe(
+                START_NANOS + 20_000_000L, unfocused,
+                stability.evaluate(candidate(after)));
+
+        assertAll(
+                () -> assertEquals(MoveConfirmationTracker.Status.WAITING,
+                        firstChangedFrame.status()),
+                () -> assertEquals(MoveConfirmationTracker.Status.CONFIRMED,
+                        stableChangedFrame.status()),
+                () -> assertTrue(stableChangedFrame.terminal()),
+                () -> assertEquals(AutomationState.OBSERVING, kernel.state())
         );
     }
 
