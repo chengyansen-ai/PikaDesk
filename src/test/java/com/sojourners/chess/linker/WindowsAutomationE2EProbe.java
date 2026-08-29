@@ -13,6 +13,7 @@ import java.awt.AWTException;
 import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 import java.util.Locale;
 
 /**
@@ -42,12 +43,18 @@ public final class WindowsAutomationE2EProbe {
         BoardCoordinateMapper.TargetSnapshot snapshot = target.currentTarget().orElseThrow();
         BoardCoordinateMapper.ClientArea client = snapshot.clientArea();
 
+        long modelStarted = System.nanoTime();
         Yolo11Model model = new Yolo11Model();
+        long modelInitMillis = elapsedMillis(modelStarted);
         RecognitionGate.StabilityTracker recognition =
                 new RecognitionGate(RecognitionGate.Policy.safeDefaults()).newStabilityTracker();
         Robot robot = new Robot();
+        long firstRecognitionStarted = System.nanoTime();
         recognition.evaluate(model.recognize(capture(robot, client)));
+        long firstRecognitionMillis = elapsedMillis(firstRecognitionStarted);
+        long stableRecognitionStarted = System.nanoTime();
         RecognitionResult stableBefore = recognition.evaluate(model.recognize(capture(robot, client)));
+        long stableRecognitionMillis = elapsedMillis(stableRecognitionStarted);
         if (!stableBefore.accepted()) {
             RecognitionResult.Rejection rejection = stableBefore.rejection().orElseThrow();
             throw new IllegalStateException("could not establish stable visual baseline: "
@@ -79,9 +86,12 @@ public final class WindowsAutomationE2EProbe {
         char[][] canonicalBoard = blackAtBottom
                 ? rotate180(visualBoard) : copy(visualBoard);
         WindowsMoveCoordinator.ExecutionOutcome outcome = null;
+        long moveConfirmationStarted = System.nanoTime();
+        long[] moveConfirmationSamples = new long[arguments.moveCount()];
         for (int index = 0; index < arguments.moveCount(); index++) {
             ProbeMove move = arguments.moveCount() == 1
                     ? singleMove(blackAtBottom) : enduranceMove(index);
+            long sampleStarted = System.nanoTime();
             outcome = coordinator.executeAndConfirm(
                     calibration,
                     canonicalBoard,
@@ -92,6 +102,7 @@ public final class WindowsAutomationE2EProbe {
                     30,
                     2_000
             );
+            moveConfirmationSamples[index] = elapsedMillis(sampleStarted);
             if (!outcome.confirmed()) {
                 throw new IllegalStateException("visual confirmation failed at move "
                         + (index + 1) + " (" + move.ucci() + "): " + outcome.detail());
@@ -104,6 +115,7 @@ public final class WindowsAutomationE2EProbe {
                         + "/" + arguments.moveCount());
             }
         }
+        long moveConfirmationMillis = elapsedMillis(moveConfirmationStarted);
         System.out.println("E2E_TARGET=" + target.authorization().targetId());
         System.out.println("E2E_DPI=" + snapshot.dpi());
         System.out.println("E2E_CLIENT=" + client);
@@ -113,6 +125,16 @@ public final class WindowsAutomationE2EProbe {
                 + (arguments.explicitCalibration() ? "EXPLICIT" : "MODEL"));
         System.out.println("E2E_ORIENTATION="
                 + (blackAtBottom ? "BLACK_AT_BOTTOM" : "RED_AT_BOTTOM"));
+        System.out.println("E2E_MODEL_INIT_MS=" + modelInitMillis);
+        System.out.println("E2E_RECOGNITION_FIRST_MS=" + firstRecognitionMillis);
+        System.out.println("E2E_RECOGNITION_STABLE_MS=" + stableRecognitionMillis);
+        System.out.println("E2E_MOVE_CONFIRM_MS=" + moveConfirmationMillis);
+        System.out.println("E2E_MOVE_CONFIRM_AVG_MS=" + Math.round(
+                Arrays.stream(moveConfirmationSamples).average().orElse(0)));
+        System.out.println("E2E_MOVE_CONFIRM_P95_MS="
+                + percentile95(moveConfirmationSamples));
+        System.out.println("E2E_MOVE_CONFIRM_MAX_MS="
+                + Arrays.stream(moveConfirmationSamples).max().orElse(0));
         System.out.println(arguments.moveCount() == 1
                 ? "E2E_MOVE=a0a1" : "E2E_MOVES=" + arguments.moveCount());
         System.out.println("E2E_CONFIRMATION=" + outcome.confirmationStatus().orElseThrow());
@@ -264,6 +286,18 @@ public final class WindowsAutomationE2EProbe {
         String normalized = value.startsWith("0x") || value.startsWith("0X")
                 ? value.substring(2) : value;
         return Long.parseUnsignedLong(normalized, 16);
+    }
+
+    private static long elapsedMillis(long startedNanos) {
+        return Math.max(0L, (System.nanoTime() - startedNanos) / 1_000_000L);
+    }
+
+    private static long percentile95(long[] samples) {
+        long[] sorted = samples.clone();
+        Arrays.sort(sorted);
+        int index = Math.max(0,
+                (int) Math.ceil(sorted.length * 0.95) - 1);
+        return sorted[index];
     }
 
     private static String windowTitle(WinDef.HWND handle) {
