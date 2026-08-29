@@ -267,8 +267,9 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
                 if (detail.length() > 160) {
                     detail = detail.substring(0, 160) + "…";
                 }
-                publishConnectionStatus(ConnectionStatus.State.PAUSED,
-                        "走子确认失败：" + detail);
+                // Detail is surfaced by the confirmationFailureDetail() hook
+                // through the base-class pause message; keep a console trace.
+                System.err.println("automation paused: " + detail);
             }
             return outcome.confirmed();
         } catch (RuntimeException failure) {
@@ -279,6 +280,12 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
                     "校准状态变化，连接已暂停");
             return false;
         }
+    }
+
+    @Override
+    protected String confirmationFailureDetail() {
+        return moveCoordinator != null
+                ? moveCoordinator.lastReason().orElse(null) : null;
     }
 
     static BoardCoordinateMapper.BoardBounds calibrationBoardBounds(

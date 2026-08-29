@@ -177,8 +177,11 @@ public abstract class AbstractGraphLinker implements GraphLinker, Runnable {
                                     action.x1, action.y1, action.x2, action.y2,
                                     isReverse, board2, visualBoard)) {
                                 pause = true;
+                                String detail = confirmationFailureDetail();
                                 publishConnectionStatus(ConnectionStatus.State.PAUSED,
-                                        "走子确认失败，连接已暂停");
+                                        detail == null || detail.isBlank()
+                                                ? "走子确认失败，连接已暂停"
+                                                : "走子确认失败：" + bounded(detail, 160));
                                 continue;
                             }
 
@@ -607,6 +610,23 @@ public abstract class AbstractGraphLinker implements GraphLinker, Runnable {
                                             char[][] canonicalPositionBeforeMove,
                                             char[][] visualPositionBeforeMove) {
         return false;
+    }
+
+    /**
+     * Optional failure detail for the move-confirmation pause message.
+     * Implementations return the specific rejection reason so the status bar
+     * shows why a confirmed move did not apply.
+     */
+    protected String confirmationFailureDetail() {
+        return null;
+    }
+
+    private static String bounded(String value, int maxLength) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+        String safe = value.trim();
+        return safe.length() > maxLength ? safe.substring(0, maxLength) + "…" : safe;
     }
 
     protected void onAutomationStopped() { }
