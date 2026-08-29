@@ -121,7 +121,7 @@ public class LinkSettingController {
                     number(linkThreadNum, "识别线程"),
                     number(mouseClickDelay, "点击间隔"),
                     number(mouseMoveDelay, "走子间隔"));
-            BoardCoordinateMapper.MovePoints points = wizard.verifyDryRun(
+            BoardCoordinateMapper.MovePoints points = wizard.verifyDryRunVisible(
                     wizard.target(), new BoardCoordinateMapper.Move(0, 0, 0, 1));
             if (readOnlyMode()) {
                 verificationLabel.setText("只读校准通过：棋盘 a0 → a1 对应 ("

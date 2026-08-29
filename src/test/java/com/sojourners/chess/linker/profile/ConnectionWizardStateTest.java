@@ -282,6 +282,53 @@ final class ConnectionWizardStateTest {
         assertFalse(wizard.canEnableAutomation());
     }
 
+    @Test
+    void visibleButUnfocusedTargetPassesRelaxedDryRunButNotStrictOne() {
+        ConnectionWizardState wizard = new ConnectionWizardState();
+        ConnectionWizardState.TargetObservation selected = target(
+                31, 120, 80, 960, 720, 144);
+        ConnectionWizardState.TargetObservation unfocused = target(
+                31, 120, 80, 960, 720, 144, false, true);
+
+        wizard.selectTarget(selected);
+        wizard.setBoardBounds(new BoardCoordinateMapper.BoardBounds(80, 50, 800, 620));
+        wizard.setDisplay(
+                BoardCoordinateMapper.Orientation.RED_AT_BOTTOM, "CLASSIC");
+        wizard.setModelAndTiming("yolo11-xiangqi", 100, 2, 2, 0);
+
+        assertThrows(IllegalStateException.class,
+                () -> wizard.verifyDryRun(
+                        unfocused, new BoardCoordinateMapper.Move(0, 0, 0, 1)));
+        assertFalse(wizard.canEnableAutomation());
+
+        BoardCoordinateMapper.MovePoints points = wizard.verifyDryRunVisible(
+                unfocused, new BoardCoordinateMapper.Move(0, 0, 0, 1));
+        assertTrue(wizard.canEnableAutomation());
+        assertEquals(ConnectionWizardState.Step.READY, wizard.step());
+        assertTrue(points.from().x() >= 120 && points.to().y() >= 80);
+    }
+
+    @Test
+    void invisibleTargetIsRejectedByRelaxedDryRunToo() {
+        ConnectionWizardState wizard = new ConnectionWizardState();
+        ConnectionWizardState.TargetObservation selected = target(
+                32, 120, 80, 960, 720, 144);
+        ConnectionWizardState.TargetObservation hidden = target(
+                32, 120, 80, 960, 720, 144, true, false);
+
+        wizard.selectTarget(selected);
+        wizard.setBoardBounds(new BoardCoordinateMapper.BoardBounds(80, 50, 800, 620));
+        wizard.setDisplay(
+                BoardCoordinateMapper.Orientation.RED_AT_BOTTOM, "CLASSIC");
+        wizard.setModelAndTiming("yolo11-xiangqi", 100, 2, 2, 0);
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> wizard.verifyDryRunVisible(
+                        hidden, new BoardCoordinateMapper.Move(0, 0, 0, 1)));
+        assertTrue(failure.getMessage().contains("必须可见"));
+        assertFalse(wizard.canEnableAutomation());
+    }
+
     private static ConnectionWizardState readyWizard() {
         ConnectionWizardState wizard = new ConnectionWizardState();
         wizard.selectTarget(target(11, 120, 80, 960, 720, 144));
@@ -296,11 +343,17 @@ final class ConnectionWizardStateTest {
 
     private static ConnectionWizardState.TargetObservation target(
             long revision, int x, int y, int width, int height, int dpi) {
+        return target(revision, x, y, width, height, dpi, true, true);
+    }
+
+    private static ConnectionWizardState.TargetObservation target(
+            long revision, int x, int y, int width, int height, int dpi,
+            boolean focused, boolean visible) {
         return new ConnectionWizardState.TargetObservation(
                 "windows:pid=42;hwnd=100", revision,
                 "LocalBoard.exe", "JavaFX", "本地测试棋盘",
                 "C:\\Private\\LocalBoard.exe",
                 new BoardCoordinateMapper.ClientArea(x, y, width, height),
-                dpi, true, true);
+                dpi, focused, visible);
     }
 }

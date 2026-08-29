@@ -163,6 +163,17 @@ public final class ConnectionWizardState {
         return verifyMapping(current, sampleMove, true);
     }
 
+    /**
+     * Dry-run variant that only requires the target to be visible, not
+     * focused. The preview emits no input, so focus is not needed here; the
+     * execution stage still revalidates focus immediately before any click.
+     */
+    public BoardCoordinateMapper.MovePoints verifyDryRunVisible(
+            TargetObservation current,
+            BoardCoordinateMapper.Move sampleMove) {
+        return verifyMapping(current, sampleMove, false);
+    }
+
     private BoardCoordinateMapper.MovePoints verifyMapping(
             TargetObservation current,
             BoardCoordinateMapper.Move sampleMove,
@@ -180,8 +191,8 @@ public final class ConnectionWizardState {
         }
         if (!current.visible() || requireFocus && !current.focused()) {
             throw new IllegalStateException(requireFocus
-                    ? "测试前目标窗口必须可见并获得焦点"
-                    : "只读预校准前目标窗口必须可见");
+                    ? "干运行前目标窗口必须可见并获得焦点（请先把目标窗口点到最前）"
+                    : "干运行前目标窗口必须可见");
         }
         BoardCoordinateMapper.Calibration calibration = calibration();
         BoardCoordinateMapper.MappingResult result;
