@@ -1104,8 +1104,10 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
             e.printStackTrace();
         }
 
-        linkComboBox.getItems().addAll("自动走棋", "观战模式");
-        linkComboBox.setValue("自动走棋");
+        linkComboBox.getItems().addAll(
+                LinkMode.READ_ONLY_ADVISOR.displayName(),
+                LinkMode.AUTHORIZED_AUTOMATION.displayName());
+        linkComboBox.setValue(LinkMode.safeDefault().displayName());
     }
 
     private void refreshEngineComboBox() {
@@ -1174,7 +1176,7 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
 
     private void setLinkMode(String t1) {
         if (linkMode.getValue()) {
-            if ("自动走棋".equals(t1)) {
+            if (LinkMode.fromDisplayName(t1).externalInputAllowed()) {
                 // 观战模式切换自动走棋，先停止引擎
                 engineStop();
                 // 走黑棋/红棋
@@ -1428,7 +1430,7 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
 
     @Override
     public boolean isWatchMode() {
-        return "观战模式".equals(linkComboBox.getValue());
+        return !LinkMode.fromDisplayName(linkComboBox.getValue()).externalInputAllowed();
     }
 
     @Override
