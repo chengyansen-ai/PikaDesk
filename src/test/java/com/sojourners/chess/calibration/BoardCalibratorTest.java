@@ -33,6 +33,19 @@ class BoardCalibratorTest {
     }
 
     @Test
+    void physicalHiDpiSnapshotUsesUnitFactor() {
+        // HiDPI: Robot snapshot is physical-resolution, so the effective
+        // factor derived from (logicalWidth * scale / imageWidth) is 1.0
+        // even though the display scale is 1.5. Points are already physical.
+        BoardCoordinateMapper.BoardBounds bounds = BoardCalibrator.fromTwoCorners(
+                point(200, 200), point(1200, 800), CLIENT, 1.0);
+        assertEquals(100, bounds.x());
+        assertEquals(0, bounds.y());
+        assertEquals(1000, bounds.width());
+        assertEquals(600, bounds.height());
+    }
+
+    @Test
     void reversedCornersAreRejected() {
         assertThrows(IllegalArgumentException.class, () -> BoardCalibrator.fromTwoCorners(
                 point(1200, 800), point(200, 200), CLIENT, 1.0));

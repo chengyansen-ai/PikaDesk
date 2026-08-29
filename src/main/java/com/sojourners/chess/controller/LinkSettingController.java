@@ -160,12 +160,13 @@ public class LinkSettingController {
             return;
         }
         BoardCoordinateMapper.ClientArea client = wizard.target().clientArea();
-        double scaling = screenScalingFactor();
         App.parkLinkSettingOffScreen();
         try {
             pauseBriefly();
             BufferedImage snapshot = captureFullScreen();
-            App.openCalibrationDialog(snapshot, client, scaling, this::applyCalibratedBounds);
+            double effective = effectiveSnapshotScaling(snapshot);
+            App.openCalibrationDialog(snapshot, client, effective,
+                    this::applyCalibratedBounds);
         } catch (AWTException failure) {
             DialogUtils.showErrorDialog("截屏失败", "无法访问屏幕："
                     + message(failure));
@@ -187,6 +188,23 @@ public class LinkSettingController {
         return GraphicsEnvironment.getLocalGraphicsEnvironment()
                 .getDefaultScreenDevice().getDefaultConfiguration()
                 .getDefaultTransform().getScaleX();
+    }
+
+    /**
+     * Converts snapshot image pixels to physical screen pixels. On HiDPI
+     * displays AWT Robot captures are already physical-resolution images
+     * (image width == logical width x scale), while on non-scaled displays
+     * the image is logical-sized. Comparing the image width against the
+     * logical screen width derives the correct factor either way, so the
+     * conversion never double-scales.
+     */
+    private static double effectiveSnapshotScaling(BufferedImage snapshot) {
+        double logicalWidth = Toolkit.getDefaultToolkit()
+                .getScreenSize().getWidth();
+        if (snapshot == null || snapshot.getWidth() <= 0 || logicalWidth <= 0) {
+            return screenScalingFactor();
+        }
+        return logicalWidth * screenScalingFactor() / snapshot.getWidth();
     }
 
     private static BufferedImage captureFullScreen() throws AWTException {

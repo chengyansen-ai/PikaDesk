@@ -5,13 +5,14 @@ import com.sojourners.chess.automation.BoardCoordinateMapper;
 /**
  * Two-corner board calibration. The user clicks the top-left and the
  * bottom-right board intersections of any local board; the calibrator converts
- * the logical (AWT) screen points into client-relative physical bounds
- * compatible with {@link BoardCoordinateMapper.BoardBounds}.
+ * the snapshot image points into client-relative physical bounds compatible
+ * with {@link BoardCoordinateMapper.BoardBounds}.
  *
- * <p>Semantics: JNA window geometry is physical pixels, while AWT screenshot
- * coordinates are logical pixels on HiDPI displays. Multiplying the logical
- * point by the screen scaling factor yields the physical screen point; the
- * client origin is then subtracted to obtain client-relative bounds.</p>
+ * <p>The conversion factor maps one snapshot image pixel to physical screen
+ * pixels. On HiDPI displays AWT screenshots are already physical-resolution
+ * (factor 1.0); on non-scaled displays the image is logical-sized and the
+ * factor equals the display scale. Callers derive it from the snapshot width
+ * versus the logical screen width so it is never double-applied.</p>
  */
 public final class BoardCalibrator {
 

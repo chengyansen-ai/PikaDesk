@@ -260,9 +260,15 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
                             3_000
                     );
             if (!outcome.confirmed()) {
-                System.err.println("automation paused: " + outcome.detail());
+                String detail = outcome.detail();
+                if (detail == null || detail.isBlank()) {
+                    detail = "未知原因";
+                }
+                if (detail.length() > 160) {
+                    detail = detail.substring(0, 160) + "…";
+                }
                 publishConnectionStatus(ConnectionStatus.State.PAUSED,
-                        "走子确认失败，连接已暂停");
+                        "走子确认失败：" + detail);
             }
             return outcome.confirmed();
         } catch (RuntimeException failure) {
