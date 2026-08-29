@@ -10,6 +10,7 @@ import com.sojourners.chess.controller.LocalBookController;
 import com.sojourners.chess.controller.LinkSettingController;
 import com.sojourners.chess.linker.profile.ConnectionProfile;
 import com.sojourners.chess.linker.profile.ConnectionWizardState;
+import com.sojourners.chess.util.DialogUtils;
 import javafx.application.Application;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -200,18 +201,24 @@ public class App extends Application {
     }
 
     /**
-     * Temporarily hides the link-setting stage so a full-screen snapshot can be
-     * taken while the target window is visible. Call showLinkSetting to restore.
+     * Parks the link-setting stage off-screen so a full-screen snapshot can be
+     * taken while the target window is visible. Unlike hide(), this keeps the
+     * wizard's modal loop alive so the pending connection is not aborted.
      */
-    public static void hideLinkSetting() {
-        if (linkSetting != null && linkSetting.isShowing()) {
-            linkSetting.hide();
+    private static double linkSettingParkedX = Double.NaN;
+
+    public static void parkLinkSettingOffScreen() {
+        if (linkSetting != null && linkSetting.isShowing()
+                && !Double.isFinite(linkSettingParkedX)) {
+            linkSettingParkedX = linkSetting.getX();
+            linkSetting.setX(-10_000);
         }
     }
 
-    public static void showLinkSetting() {
-        if (linkSetting != null && !linkSetting.isShowing()) {
-            linkSetting.show();
+    public static void restoreLinkSetting() {
+        if (linkSetting != null && Double.isFinite(linkSettingParkedX)) {
+            linkSetting.setX(linkSettingParkedX);
+            linkSettingParkedX = Double.NaN;
         }
     }
 
@@ -243,7 +250,9 @@ public class App extends Application {
             controller.renderSnapshot();
             stage.showAndWait();
         } catch (Exception failure) {
-            failure.printStackTrace();
+            String detail = failure.getMessage() == null
+                    ? failure.getClass().getSimpleName() : failure.getMessage();
+            DialogUtils.showErrorDialog("标定对话框打开失败", detail);
         }
     }
 

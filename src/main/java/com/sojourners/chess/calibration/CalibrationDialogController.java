@@ -7,7 +7,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
@@ -180,14 +179,15 @@ public class CalibrationDialogController {
     }
 
     private static Image toFxImage(BufferedImage source) {
-        WritableImage target = new WritableImage(source.getWidth(), source.getHeight());
-        PixelWriter writer = target.getPixelWriter();
-        for (int y = 0; y < source.getHeight(); y++) {
-            for (int x = 0; x < source.getWidth(); x++) {
-                int argb = source.getRGB(x, y);
-                writer.setArgb(x, y, argb);
-            }
-        }
+        int width = source.getWidth();
+        int height = source.getHeight();
+        int[] pixels = new int[width * height];
+        source.getRGB(0, 0, width, height, pixels, 0, width);
+        WritableImage target = new WritableImage(width, height);
+        target.getPixelWriter().setPixels(
+                0, 0, width, height,
+                javafx.scene.image.PixelFormat.getIntArgbInstance(),
+                pixels, 0, width);
         return target;
     }
 }

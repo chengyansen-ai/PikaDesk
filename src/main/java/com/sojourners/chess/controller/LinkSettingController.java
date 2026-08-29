@@ -155,13 +155,13 @@ public class LinkSettingController {
         }
         if (!DialogUtils.showConfirmDialog("截图标定棋盘",
                 "请先将目标窗口完整置于屏幕最前（副屏窗口请先拖回主屏）。\n"
-                        + "点击确定后，本窗口将临时隐藏并截取全屏，然后在截图中依次点击"
+                        + "点击确定后，本窗口将临时移出屏幕并截取全屏，然后在截图中依次点击"
                         + "棋盘最左上角与最右下角的交叉点。")) {
             return;
         }
         BoardCoordinateMapper.ClientArea client = wizard.target().clientArea();
         double scaling = screenScalingFactor();
-        App.hideLinkSetting();
+        App.parkLinkSettingOffScreen();
         try {
             pauseBriefly();
             BufferedImage snapshot = captureFullScreen();
@@ -170,7 +170,7 @@ public class LinkSettingController {
             DialogUtils.showErrorDialog("截屏失败", "无法访问屏幕："
                     + message(failure));
         } finally {
-            App.showLinkSetting();
+            App.restoreLinkSetting();
         }
     }
 
