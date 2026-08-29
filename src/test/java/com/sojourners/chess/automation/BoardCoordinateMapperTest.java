@@ -64,6 +64,21 @@ final class BoardCoordinateMapperTest {
     }
 
     @Test
+    void previewsCoordinatesWithoutRequiringInputAuthorizationOrWindowFocus() {
+        BoardCoordinateMapper.MappingResult result = mapper.previewMove(
+                calibration(BoardCoordinateMapper.Orientation.RED_AT_BOTTOM),
+                new BoardCoordinateMapper.Move(0, 0, 0, 1));
+
+        assertAll(
+                () -> assertTrue(result.accepted()),
+                () -> assertEquals(new BoardCoordinateMapper.ScreenPoint(150, 870),
+                        result.points().orElseThrow().from()),
+                () -> assertEquals(new BoardCoordinateMapper.ScreenPoint(150, 800),
+                        result.points().orElseThrow().to())
+        );
+    }
+
+    @Test
     void rejectsAuthorizationIdentityAndRevisionChanges() {
         BoardCoordinateMapper.Calibration calibration =
                 calibration(BoardCoordinateMapper.Orientation.RED_AT_BOTTOM);

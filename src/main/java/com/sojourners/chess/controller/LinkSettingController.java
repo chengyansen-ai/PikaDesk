@@ -243,11 +243,17 @@ public class LinkSettingController {
             mouseClickDelay.setText(String.valueOf(wizard.clickDelayMillis()));
             mouseMoveDelay.setText(String.valueOf(wizard.moveDelayMillis()));
         }
-        stepLabel.setText(wizard.boardBounds() == null
-                ? "2/5 需要填写棋盘边界" : "4/5 请核对并执行干运行");
-        verificationLabel.setText(readOnlyMode()
-                ? "只读陪练只会截图识别、同步棋谱并显示引擎候选；不会向目标窗口发送输入。"
-                : "自动点击仍为关闭状态。干运行只计算两个落点，不会点击窗口。");
+        if (readOnlyMode() && wizard.canEnableAutomation()) {
+            stepLabel.setText("5/5 已自动预校准 · 等待启动只读陪练");
+            verificationLabel.setText(
+                    "已根据当前窗口重新识别棋盘并完成只读坐标预览；本次连接不会创建或武装外部输入能力。");
+        } else {
+            stepLabel.setText(wizard.boardBounds() == null
+                    ? "2/5 需要填写棋盘边界" : "4/5 请核对并执行干运行");
+            verificationLabel.setText(readOnlyMode()
+                    ? "只读陪练只会截图识别、同步棋谱并显示引擎候选；不会向目标窗口发送输入。"
+                    : "自动点击仍为关闭状态。干运行只计算两个落点，不会点击窗口。");
+        }
         verifiedFieldsDirty = false;
         updateControls();
     }
@@ -264,6 +270,9 @@ public class LinkSettingController {
         boolean hasTarget = wizard != null && wizard.target() != null;
         dryRunButton.setDisable(!hasTarget);
         boolean ready = hasTarget && wizard.canEnableAutomation() && !verifiedFieldsDirty;
+        dryRunButton.setText(readOnlyMode()
+                ? ready ? "重新执行识别校准（不点击）" : "执行识别校准（不点击）"
+                : "执行坐标干运行（不点击）");
         completeButton.setText(hasTarget
                 ? readOnlyMode() ? "启动只读陪练" : "完成并允许本次连接"
                 : "保存参数");

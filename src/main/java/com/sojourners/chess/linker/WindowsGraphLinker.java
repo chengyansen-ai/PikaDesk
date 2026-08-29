@@ -1,6 +1,7 @@
 package com.sojourners.chess.linker;
 
 import com.sojourners.chess.automation.BoardCoordinateMapper;
+import com.sojourners.chess.config.Properties;
 import com.sojourners.chess.jna.User32Extra;
 import com.sojourners.chess.linker.profile.ConnectionProfile;
 import com.sojourners.chess.linker.profile.ConnectionWizardState;
@@ -73,13 +74,22 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
             this.needScaling = needScaling(this.hwnd);
 
             this.automationTarget = WindowsAutomationTarget.attach(this.hwnd);
-            ConnectionWizardState wizard = new ConnectionWizardState(connectionMode());
+            LinkMode requestedMode = connectionMode();
+            ConnectionWizardState wizard = new ConnectionWizardState(requestedMode);
             ConnectionWizardState.TargetObservation selected = observeTarget();
             wizard.selectTarget(selected);
             if (findBoardPosition()) {
-                wizard.setBoardBounds(calibrationBoardBounds(
+                BoardCoordinateMapper.BoardBounds detectedBounds = calibrationBoardBounds(
                         boardPosition(), boardFrameWidth(), boardFrameHeight(),
-                        selected.clientArea()));
+                        selected.clientArea());
+                if (requestedMode == LinkMode.READ_ONLY_ADVISOR) {
+                    wizard.prepareReadOnlyAdvisor(
+                            selected, detectedBounds,
+                            preferredScanIntervalMillis(),
+                            preferredRecognitionThreads());
+                } else {
+                    wizard.setBoardBounds(detectedBounds);
+                }
             }
 
             ConnectionProfile approved = requestConnectionConfiguration(wizard);
@@ -97,7 +107,7 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
 
             this.approvedProfile = approved;
             this.approvedTarget = currentSnapshot();
-            this.sessionMode = connectionMode();
+            this.sessionMode = requestedMode;
             if (sessionMode.externalInputAllowed()) {
                 this.moveCoordinator = new WindowsMoveCoordinator(
                         this.automationTarget, this::recognizeNextVisualFrame);
@@ -262,6 +272,17 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
         } finally {
             restoreCursor();
         }
+    }
+
+    private int preferredScanIntervalMillis() {
+        long configured = Properties.getInstance().getLinkScanTime();
+        return configured >= 20 && configured <= 10_000
+                ? (int) configured : 100;
+    }
+
+    private int preferredRecognitionThreads() {
+        int configured = Properties.getInstance().getLinkThreadNum();
+        return configured >= 1 && configured <= 64 ? configured : 2;
     }
 
     private BoardCoordinateMapper.TargetSnapshot currentSnapshot() {

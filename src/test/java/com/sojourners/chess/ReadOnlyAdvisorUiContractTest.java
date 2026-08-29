@@ -20,4 +20,23 @@ final class ReadOnlyAdvisorUiContractTest {
 
         assertTrue(stopGraphLink.contains("immediateButton.setDisable(false);"));
     }
+
+    @Test
+    void windowsSelectionUsesFreshModelBoundsForReadOnlyPreflight() throws Exception {
+        String linker = Files.readString(Path.of(
+                "src", "main", "java", "com", "sojourners", "chess",
+                "linker", "WindowsGraphLinker.java"));
+
+        assertTrue(linker.contains("wizard.prepareReadOnlyAdvisor("));
+    }
+
+    @Test
+    void wizardExplainsThatFreshReadOnlyPreflightAlreadyPassed() throws Exception {
+        String controller = Files.readString(Path.of(
+                "src", "main", "java", "com", "sojourners", "chess",
+                "controller", "LinkSettingController.java"));
+
+        assertTrue(controller.contains("已自动预校准"));
+        assertTrue(controller.contains("重新执行识别校准（不点击）"));
+    }
 }

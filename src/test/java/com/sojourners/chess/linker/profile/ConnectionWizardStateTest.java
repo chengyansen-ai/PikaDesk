@@ -27,6 +27,49 @@ final class ConnectionWizardStateTest {
     }
 
     @Test
+    void readOnlyAdvisorCanPreflightFreshModelBoundsWithoutTargetFocus() {
+        ConnectionWizardState wizard = new ConnectionWizardState(
+                LinkMode.READ_ONLY_ADVISOR);
+        ConnectionWizardState.TargetObservation visibleTarget =
+                new ConnectionWizardState.TargetObservation(
+                        "windows:pid=42;hwnd=100", 11,
+                        "LocalBoard.exe", "JavaFX", "本地测试棋盘",
+                        "C:\\Private\\LocalBoard.exe",
+                        new BoardCoordinateMapper.ClientArea(120, 80, 960, 720),
+                        144, false, true);
+        wizard.selectTarget(visibleTarget);
+
+        BoardCoordinateMapper.MovePoints points = wizard.prepareReadOnlyAdvisor(
+                visibleTarget,
+                new BoardCoordinateMapper.BoardBounds(80, 50, 800, 620),
+                100, 2);
+
+        assertTrue(wizard.canEnableAutomation());
+        assertEquals(ConnectionWizardState.Step.READY, wizard.step());
+        assertEquals("CLASSIC", wizard.themeId());
+        assertEquals("yolo11-xiangqi", wizard.modelId());
+        assertEquals(0, wizard.clickDelayMillis());
+        assertEquals(0, wizard.moveDelayMillis());
+        assertTrue(points.from().x() >= 120 && points.to().y() >= 80);
+    }
+
+    @Test
+    void authorizedAutomationCannotReuseTheReadOnlyPreflightShortcut() {
+        ConnectionWizardState wizard = new ConnectionWizardState(
+                LinkMode.AUTHORIZED_AUTOMATION);
+        ConnectionWizardState.TargetObservation selected =
+                target(11, 120, 80, 960, 720, 144);
+        wizard.selectTarget(selected);
+
+        assertThrows(IllegalStateException.class,
+                () -> wizard.prepareReadOnlyAdvisor(
+                        selected,
+                        new BoardCoordinateMapper.BoardBounds(80, 50, 800, 620),
+                        100, 2));
+        assertFalse(wizard.canEnableAutomation());
+    }
+
+    @Test
     void cannotEnableAutomationUntilEveryStepAndDryRunPasses() {
         ConnectionWizardState wizard = new ConnectionWizardState();
         assertFalse(wizard.canEnableAutomation());

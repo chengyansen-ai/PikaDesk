@@ -63,6 +63,17 @@ public final class BoardCoordinateMapper {
                             + inputSequenceChanged);
         }
 
+        return mapWithinBounds(calibration, move);
+    }
+
+    /** Maps coordinates for a side-effect-free preview without input authorization. */
+    public MappingResult previewMove(Calibration calibration, Move move) {
+        return mapWithinBounds(
+                Objects.requireNonNull(calibration, "calibration"),
+                Objects.requireNonNull(move, "move"));
+    }
+
+    private MappingResult mapWithinBounds(Calibration calibration, Move move) {
         ScreenPoint from = mapSquare(calibration, move.fromFile(), move.fromRank());
         ScreenPoint to = mapSquare(calibration, move.toFile(), move.toRank());
         if (!calibration.boardBounds().containsScreenPoint(calibration.clientArea(), from)

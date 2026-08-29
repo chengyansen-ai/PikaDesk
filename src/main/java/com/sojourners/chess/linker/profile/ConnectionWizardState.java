@@ -135,9 +135,39 @@ public final class ConnectionWizardState {
         step = Step.TEST;
     }
 
+    /**
+     * Completes the coordinate-only read-only preflight from freshly detected
+     * model bounds. This path never carries click or move delays and is not
+     * available to an input-capable connection.
+     */
+    public BoardCoordinateMapper.MovePoints prepareReadOnlyAdvisor(
+            TargetObservation current,
+            BoardCoordinateMapper.BoardBounds detectedBounds,
+            int selectedScanIntervalMillis,
+            int selectedRecognitionThreads) {
+        if (connectionMode != LinkMode.READ_ONLY_ADVISOR) {
+            throw new IllegalStateException(
+                    "read-only preflight is unavailable to input-capable connections");
+        }
+        setBoardBounds(Objects.requireNonNull(detectedBounds, "detectedBounds"));
+        setDisplay(BoardCoordinateMapper.Orientation.RED_AT_BOTTOM,
+                RecognitionCompatibility.CLASSIC_THEME);
+        setModelAndTiming(RecognitionCompatibility.XIANGQI_YOLO11_MODEL,
+                selectedScanIntervalMillis, selectedRecognitionThreads, 0, 0);
+        return verifyMapping(current,
+                new BoardCoordinateMapper.Move(0, 0, 0, 1), false);
+    }
+
     public BoardCoordinateMapper.MovePoints verifyDryRun(
             TargetObservation current,
             BoardCoordinateMapper.Move sampleMove) {
+        return verifyMapping(current, sampleMove, true);
+    }
+
+    private BoardCoordinateMapper.MovePoints verifyMapping(
+            TargetObservation current,
+            BoardCoordinateMapper.Move sampleMove,
+            boolean requireFocus) {
         if (step != Step.TEST || target == null || boardBounds == null
                 || orientation == null || modelId == null) {
             throw new IllegalStateException("wizard is not ready for dry-run verification");
@@ -149,19 +179,27 @@ public final class ConnectionWizardState {
             dryRunVerified = false;
             throw new IllegalStateException(check.message());
         }
-        if (!current.focused() || !current.visible()) {
-            throw new IllegalStateException("测试前目标窗口必须可见并获得焦点");
+        if (!current.visible() || requireFocus && !current.focused()) {
+            throw new IllegalStateException(requireFocus
+                    ? "测试前目标窗口必须可见并获得焦点"
+                    : "只读预校准前目标窗口必须可见");
         }
         BoardCoordinateMapper.Calibration calibration = calibration();
-        AutomationSafetyKernel.Authorization authorization =
-                new AutomationSafetyKernel.Authorization(
-                        target.targetId(), target.targetRevision());
-        BoardCoordinateMapper.TargetSnapshot snapshot = current.snapshot();
-        BoardCoordinateMapper.ActivitySnapshot activity =
-                new BoardCoordinateMapper.ActivitySnapshot(0, 0, 0);
-        BoardCoordinateMapper.MappingResult result = mapper.mapMove(
-                authorization, calibration, snapshot, activity, activity,
-                Objects.requireNonNull(sampleMove, "sampleMove"));
+        BoardCoordinateMapper.MappingResult result;
+        if (requireFocus) {
+            AutomationSafetyKernel.Authorization authorization =
+                    new AutomationSafetyKernel.Authorization(
+                            target.targetId(), target.targetRevision());
+            BoardCoordinateMapper.TargetSnapshot snapshot = current.snapshot();
+            BoardCoordinateMapper.ActivitySnapshot activity =
+                    new BoardCoordinateMapper.ActivitySnapshot(0, 0, 0);
+            result = mapper.mapMove(
+                    authorization, calibration, snapshot, activity, activity,
+                    Objects.requireNonNull(sampleMove, "sampleMove"));
+        } else {
+            result = mapper.previewMove(
+                    calibration, Objects.requireNonNull(sampleMove, "sampleMove"));
+        }
         if (!result.accepted()) {
             BoardCoordinateMapper.Rejection rejection = result.rejection().orElseThrow();
             throw new IllegalStateException(
