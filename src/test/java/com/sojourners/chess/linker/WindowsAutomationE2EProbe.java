@@ -38,6 +38,7 @@ public final class WindowsAutomationE2EProbe {
         if (!ALLOWED_TITLE.equals(title)) {
             throw new IllegalArgumentException("refusing non-test target: " + title);
         }
+        focusTestWindow(handle);
 
         WindowsAutomationTarget target = WindowsAutomationTarget.attach(handle);
         BoardCoordinateMapper.TargetSnapshot snapshot = target.currentTarget().orElseThrow();
@@ -116,7 +117,7 @@ public final class WindowsAutomationE2EProbe {
             }
         }
         long moveConfirmationMillis = elapsedMillis(moveConfirmationStarted);
-        System.out.println("E2E_TARGET=" + target.authorization().targetId());
+        System.out.println("E2E_TARGET=OFFLINE_TEST_BOARD");
         System.out.println("E2E_DPI=" + snapshot.dpi());
         System.out.println("E2E_CLIENT=" + client);
         System.out.println("E2E_DETECTED_BOARD=" + detected);
@@ -256,6 +257,15 @@ public final class WindowsAutomationE2EProbe {
                     "PikaDesk offline test board is not running");
         }
         return handle;
+    }
+
+    private static void focusTestWindow(WinDef.HWND handle)
+            throws InterruptedException {
+        if (!User32.INSTANCE.SetForegroundWindow(handle)) {
+            throw new IllegalStateException(
+                    "could not focus the repository test board");
+        }
+        Thread.sleep(250);
     }
 
     private static BufferedImage capture(Robot robot,

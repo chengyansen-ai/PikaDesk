@@ -21,6 +21,9 @@ $env:JAVA_HOME = 'C:\path\to\jdk-21'
 $env:JAVA_HOME = 'C:\path\to\jdk-21'
 .\mvnw.cmd --batch-mode test-compile
 .\mvnw.cmd --batch-mode org.codehaus.mojo:exec-maven-plugin:3.6.3:java `
+  '-Dexec.mainClass=com.sojourners.chess.linker.WindowsWindowCatalogProbe' `
+  '-Dexec.classpathScope=test'
+.\mvnw.cmd --batch-mode org.codehaus.mojo:exec-maven-plugin:3.6.3:java `
   '-Dexec.mainClass=com.sojourners.chess.linker.WindowsAutomationE2EProbe' `
   '-Dexec.classpathScope=test'
 ```
@@ -49,6 +52,18 @@ E2E_STATE=OBSERVING
 耐久模式只接受 `1..1000`，固定为经典主题、红方在下，并按 `a0a1`、`a9a8`、`a1a0`、`a8a9` 交替红黑双方；每四步回到标准局面。它每 50 步输出一次进度。
 
 探针仅发送一次点击对，不会失败重试。失败时，协调器暂停并返回结构化确认状态、识别拒绝码和模型版本；诊断不包含截图或完整棋盘内容。
+
+## 2026-08-29 通用窗口选择验收
+
+证据编号：`E2E-WIN-CATALOG-20260829-01`
+
+- 通用可见窗口目录找到唯一的仓库测试棋盘，客户区为 `1120x840`，会话令牌成功解析；输出不包含原生窗口句柄、进程号或其他窗口标题。
+- 失焦条件下的首次自动执行被 `TARGET_NOT_FOCUSED` 拒绝，没有发送点击，也没有重试。
+- 将精确匹配的仓库测试棋盘置前后，经典主题、红方在下连续 `20/20` 步全部 `CONFIRMED`：平均 376 ms、P95 413 ms、最大 433 ms。
+- 黑方方向的 `a0a1` 单步完成模型定位和视觉确认，耗时 427 ms。
+- 列表选择和准星回退最终都进入同一 `configureSelectedWindow`、连接向导、输入协调器与视觉确认路径；候选中没有公共平台专用规则。
+
+该记录验证通用目录与既有安全执行闭环的组合行为。图形选择框仍需要用户本人完成目标确认和会话授权；探针不会替用户勾选正式应用中的授权项。
 
 ## 2026-08-27 实机记录
 

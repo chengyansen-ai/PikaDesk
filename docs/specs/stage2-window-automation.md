@@ -48,7 +48,7 @@
 
 ```powershell
 $env:JAVA_HOME = 'C:\path\to\jdk-21'
-.\mvnw.cmd --batch-mode '-Dtest=TargetWindowChoiceTest,WindowsWindowCatalogTest,ConnectionWizardStateTest,WindowsMoveCoordinatorTest' test
+.\mvnw.cmd --batch-mode '-Dtest=TargetWindowSelectionSessionTest,WindowsWindowCatalogTest,ConnectionWizardStateTest,WindowsMoveCoordinatorTest' test
 .\mvnw.cmd --batch-mode verify
 .\scripts\package-windows.ps1
 ```
@@ -65,4 +65,3 @@ $env:JAVA_HOME = 'C:\path\to\jdk-21'
 - 只读模式仍不创建输入协调器；自动模式仍需干运行和逐会话授权。
 - 本地测试棋盘完成窗口枚举、模型定位、自动落子、视觉确认和失败闭锁验证。
 - 源码中不存在公共平台名称或专用窗口匹配规则。
-
