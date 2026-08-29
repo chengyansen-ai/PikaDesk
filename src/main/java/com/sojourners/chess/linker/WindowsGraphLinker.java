@@ -73,7 +73,7 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
             this.needScaling = needScaling(this.hwnd);
 
             this.automationTarget = WindowsAutomationTarget.attach(this.hwnd);
-            ConnectionWizardState wizard = new ConnectionWizardState();
+            ConnectionWizardState wizard = new ConnectionWizardState(connectionMode());
             ConnectionWizardState.TargetObservation selected = observeTarget();
             wizard.selectTarget(selected);
             if (findBoardPosition()) {

@@ -1169,6 +1169,13 @@ public class Controller implements EngineCallBack, LinkerCallBack, ChessManualCa
         linkComboBox.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue<? extends String> observableValue, String s, String t1) {
+                LinkMode previous = LinkMode.fromDisplayName(s);
+                LinkMode selected = LinkMode.fromDisplayName(t1);
+                if (linkMode.getValue() && selected.requiresReconnectFrom(previous)) {
+                    stopGraphLink();
+                    infoShowLabel.setText("连接模式已切换，请重新选择本地棋盘窗口。");
+                    return;
+                }
                 setLinkMode(t1);
             }
         });

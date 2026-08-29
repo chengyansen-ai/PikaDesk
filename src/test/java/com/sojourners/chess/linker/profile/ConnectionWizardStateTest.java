@@ -1,6 +1,7 @@
 package com.sojourners.chess.linker.profile;
 
 import com.sojourners.chess.automation.BoardCoordinateMapper;
+import com.sojourners.chess.linker.LinkMode;
 import com.sojourners.chess.testboard.LocalTestBoardState;
 import org.junit.jupiter.api.Test;
 
@@ -15,6 +16,15 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ConnectionWizardStateTest {
+
+    @Test
+    void carriesAnExplicitConnectionCapabilityAndDefaultsToReadOnly() {
+        assertEquals(LinkMode.READ_ONLY_ADVISOR,
+                new ConnectionWizardState().connectionMode());
+        assertEquals(LinkMode.AUTHORIZED_AUTOMATION,
+                new ConnectionWizardState(LinkMode.AUTHORIZED_AUTOMATION)
+                        .connectionMode());
+    }
 
     @Test
     void cannotEnableAutomationUntilEveryStepAndDryRunPasses() {

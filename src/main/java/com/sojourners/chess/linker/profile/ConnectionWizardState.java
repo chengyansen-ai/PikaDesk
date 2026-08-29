@@ -2,6 +2,7 @@ package com.sojourners.chess.linker.profile;
 
 import com.sojourners.chess.automation.AutomationSafetyKernel;
 import com.sojourners.chess.automation.BoardCoordinateMapper;
+import com.sojourners.chess.linker.LinkMode;
 
 import java.util.Objects;
 
@@ -12,6 +13,7 @@ import java.util.Objects;
 public final class ConnectionWizardState {
 
     private final BoardCoordinateMapper mapper = new BoardCoordinateMapper();
+    private final LinkMode connectionMode;
     private Step step = Step.TARGET;
     private String profileName = "本地棋盘";
     private ConnectionProfile importedTemplate;
@@ -25,6 +27,14 @@ public final class ConnectionWizardState {
     private int clickDelayMillis;
     private int moveDelayMillis;
     private boolean dryRunVerified;
+
+    public ConnectionWizardState() {
+        this(LinkMode.safeDefault());
+    }
+
+    public ConnectionWizardState(LinkMode connectionMode) {
+        this.connectionMode = Objects.requireNonNull(connectionMode, "connectionMode");
+    }
 
     public static ConnectionWizardState fromImported(ConnectionProfile profile) {
         ConnectionWizardState state = new ConnectionWizardState();
@@ -195,6 +205,10 @@ public final class ConnectionWizardState {
 
     public Step step() {
         return step;
+    }
+
+    public LinkMode connectionMode() {
+        return connectionMode;
     }
 
     public String profileName() {

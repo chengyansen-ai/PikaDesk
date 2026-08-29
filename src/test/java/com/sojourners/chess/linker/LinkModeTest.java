@@ -30,6 +30,16 @@ final class LinkModeTest {
     }
 
     @Test
+    void changingCapabilitiesRequiresANewConnectionSession() {
+        assertTrue(LinkMode.READ_ONLY_ADVISOR.requiresReconnectFrom(
+                LinkMode.AUTHORIZED_AUTOMATION));
+        assertTrue(LinkMode.AUTHORIZED_AUTOMATION.requiresReconnectFrom(
+                LinkMode.READ_ONLY_ADVISOR));
+        assertFalse(LinkMode.READ_ONLY_ADVISOR.requiresReconnectFrom(
+                LinkMode.READ_ONLY_ADVISOR));
+    }
+
+    @Test
     void callbackCarriesTheReadOnlyCapabilityToPlatformLinkers() {
         LinkerCallBack callback = new StubCallback(true);
 

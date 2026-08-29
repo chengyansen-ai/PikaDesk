@@ -1,5 +1,7 @@
 package com.sojourners.chess.linker;
 
+import java.util.Objects;
+
 /**
  * User-visible connection capability. Read-only is deliberately the fallback
  * for missing, legacy, or unknown selections.
@@ -34,5 +36,9 @@ public enum LinkMode {
             return AUTHORIZED_AUTOMATION;
         }
         return READ_ONLY_ADVISOR;
+    }
+
+    public boolean requiresReconnectFrom(LinkMode activeMode) {
+        return this != Objects.requireNonNull(activeMode, "activeMode");
     }
 }
