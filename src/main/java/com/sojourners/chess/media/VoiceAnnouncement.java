@@ -38,6 +38,9 @@ public record VoiceAnnouncement(Category category, String text) {
         if (source == null) {
             throw new IllegalArgumentException("Voice text is required");
         }
+        if (source.length() > MAX_TEXT_LENGTH) {
+            throw new IllegalArgumentException("Voice text is too long");
+        }
         for (int index = 0; index < source.length(); index++) {
             char character = source.charAt(index);
             if ((Character.isISOControl(character)

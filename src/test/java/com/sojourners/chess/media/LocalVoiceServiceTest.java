@@ -7,6 +7,9 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -115,6 +118,65 @@ final class LocalVoiceServiceTest {
             assertFalse(diagnostics.failureType().contains("sensitive"));
             assertEquals(LocalVoiceService.Submission.BACKEND_UNAVAILABLE,
                     service.announce(VoiceAnnouncement.warning("再试一次")));
+        }
+    }
+
+    @Test
+    void linkageFailureAlsoTripsTheBackendCircuit() throws Exception {
+        try (LocalVoiceService service = new LocalVoiceService(() -> {
+            throw new UnsatisfiedLinkError("native detail must not escape");
+        })) {
+            service.configure(VoicePreferences.allEnabled());
+            assertEquals(LocalVoiceService.Submission.ACCEPTED,
+                    service.announce(VoiceAnnouncement.warning("目标变化")));
+
+            waitUntil(() -> service.diagnostics().backendUnavailable());
+            assertEquals("UnsatisfiedLinkError",
+                    service.diagnostics().failureType());
+            assertEquals(LocalVoiceService.Submission.BACKEND_UNAVAILABLE,
+                    service.announce(VoiceAnnouncement.warning("再试一次")));
+        }
+    }
+
+    @Test
+    void concurrentOverflowNeverMasqueradesAsABackendFailure()
+            throws Exception {
+        BlockingBackend backend = new BlockingBackend();
+        try (LocalVoiceService service = new LocalVoiceService(() -> backend)) {
+            service.configure(VoicePreferences.allEnabled());
+            service.announce(VoiceAnnouncement.move("占用后端"));
+            assertTrue(backend.started.await(1, TimeUnit.SECONDS));
+            for (int index = 0; index < LocalVoiceService.QUEUE_CAPACITY;
+                 index++) {
+                service.announce(VoiceAnnouncement.move("预填 " + index));
+            }
+
+            CountDownLatch start = new CountDownLatch(1);
+            ExecutorService callers = Executors.newFixedThreadPool(16);
+            try {
+                List<Future<LocalVoiceService.Submission>> submissions =
+                        java.util.stream.IntStream.range(0, 64)
+                                .mapToObj(index -> callers.submit(() -> {
+                                    start.await();
+                                    return service.announce(
+                                            VoiceAnnouncement.move(
+                                                    "并发 " + index));
+                                }))
+                                .toList();
+                start.countDown();
+                for (Future<LocalVoiceService.Submission> submission
+                        : submissions) {
+                    assertTrue(submission.get(1, TimeUnit.SECONDS)
+                                    != LocalVoiceService.Submission
+                                    .BACKEND_UNAVAILABLE,
+                            "queue contention is not a backend failure");
+                }
+            } finally {
+                callers.shutdownNow();
+            }
+            assertEquals(LocalVoiceService.QUEUE_CAPACITY,
+                    service.diagnostics().queued());
+            backend.release.countDown();
         }
     }
 

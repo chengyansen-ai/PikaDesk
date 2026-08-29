@@ -19,6 +19,7 @@ public final class LocalVoiceService implements AutoCloseable {
     public static final int QUEUE_CAPACITY = 8;
 
     private final BackendFactory backendFactory;
+    private final Object submissionLock = new Object();
     private final ArrayBlockingQueue<VoiceAnnouncement> queue =
             new ArrayBlockingQueue<>(QUEUE_CAPACITY);
     private final AtomicReference<VoicePreferences> preferences =
@@ -51,41 +52,50 @@ public final class LocalVoiceService implements AutoCloseable {
 
     public void configure(VoicePreferences nextPreferences) {
         Objects.requireNonNull(nextPreferences, "nextPreferences");
-        VoicePreferences previous = preferences.getAndSet(nextPreferences);
-        if (!nextPreferences.enabled()) {
-            queue.clear();
-            worker.interrupt();
-            return;
+        boolean wakeWorker = false;
+        synchronized (submissionLock) {
+            VoicePreferences previous =
+                    preferences.getAndSet(nextPreferences);
+            if (!nextPreferences.enabled()) {
+                queue.clear();
+                wakeWorker = true;
+            } else if (!previous.enabled()) {
+                backendUnavailable.set(false);
+                failureType.set("");
+                wakeWorker = true;
+            }
         }
-        if (!previous.enabled()) {
-            backendUnavailable.set(false);
-            failureType.set("");
+        if (wakeWorker) {
             worker.interrupt();
         }
     }
 
     public Submission announce(VoiceAnnouncement announcement) {
         Objects.requireNonNull(announcement, "announcement");
-        if (closed.get()) {
-            return Submission.CLOSED;
+        synchronized (submissionLock) {
+            if (closed.get()) {
+                return Submission.CLOSED;
+            }
+            VoicePreferences current = preferences.get();
+            if (!current.enabled()) {
+                return Submission.DISABLED;
+            }
+            if (!current.allows(announcement.category())) {
+                return Submission.FILTERED;
+            }
+            if (backendUnavailable.get()) {
+                return Submission.BACKEND_UNAVAILABLE;
+            }
+            if (queue.offer(announcement)) {
+                return Submission.ACCEPTED;
+            }
+            queue.poll();
+            if (!queue.offer(announcement)) {
+                throw new IllegalStateException(
+                        "Bounded voice queue could not accept replacement");
+            }
+            return Submission.REPLACED_OLDEST;
         }
-        VoicePreferences current = preferences.get();
-        if (!current.enabled()) {
-            return Submission.DISABLED;
-        }
-        if (!current.allows(announcement.category())) {
-            return Submission.FILTERED;
-        }
-        if (backendUnavailable.get()) {
-            return Submission.BACKEND_UNAVAILABLE;
-        }
-        if (queue.offer(announcement)) {
-            return Submission.ACCEPTED;
-        }
-        queue.poll();
-        return queue.offer(announcement)
-                ? Submission.REPLACED_OLDEST
-                : Submission.BACKEND_UNAVAILABLE;
     }
 
     public Diagnostics diagnostics() {
@@ -95,8 +105,14 @@ public final class LocalVoiceService implements AutoCloseable {
 
     @Override
     public void close() {
-        if (closed.compareAndSet(false, true)) {
-            queue.clear();
+        boolean wakeWorker = false;
+        synchronized (submissionLock) {
+            if (closed.compareAndSet(false, true)) {
+                queue.clear();
+                wakeWorker = true;
+            }
+        }
+        if (wakeWorker) {
             worker.interrupt();
         }
     }
@@ -119,7 +135,7 @@ public final class LocalVoiceService implements AutoCloseable {
 
                 VoiceAnnouncement announcement;
                 try {
-                    announcement = queue.poll(250, TimeUnit.MILLISECONDS);
+                    announcement = queue.take();
                 } catch (InterruptedException interrupted) {
                     if (closed.get()) {
                         break;
@@ -137,7 +153,7 @@ public final class LocalVoiceService implements AutoCloseable {
                         backend = backendFactory.open();
                     }
                     backend.speak(announcement.text());
-                } catch (Exception failure) {
+                } catch (Exception | LinkageError failure) {
                     if (failure instanceof InterruptedException
                             && (closed.get()
                             || !preferences.get().enabled())) {
@@ -147,9 +163,11 @@ public final class LocalVoiceService implements AutoCloseable {
                         }
                         continue;
                     }
-                    backendUnavailable.set(true);
-                    failureType.set(safeFailureType(failure));
-                    queue.clear();
+                    synchronized (submissionLock) {
+                        backendUnavailable.set(true);
+                        failureType.set(safeFailureType(failure));
+                        queue.clear();
+                    }
                     backend = closeQuietly(backend);
                 }
             }
@@ -159,7 +177,7 @@ public final class LocalVoiceService implements AutoCloseable {
         }
     }
 
-    private String safeFailureType(Exception failure) {
+    private String safeFailureType(Throwable failure) {
         String simpleName = failure.getClass().getSimpleName();
         return simpleName.isBlank() ? "BackendFailure" : simpleName;
     }
@@ -168,7 +186,7 @@ public final class LocalVoiceService implements AutoCloseable {
         if (backend != null) {
             try {
                 backend.close();
-            } catch (Exception ignored) {
+            } catch (Exception | LinkageError ignored) {
                 // Voice shutdown must never affect application shutdown.
             }
         }

@@ -27,5 +27,7 @@ final class VoiceAnnouncementTest {
                 () -> VoiceAnnouncement.warning("警告\u0000停止"));
         assertThrows(IllegalArgumentException.class,
                 () -> VoiceAnnouncement.move("<speak>炮二平五</speak>"));
+        assertThrows(IllegalArgumentException.class,
+                () -> VoiceAnnouncement.warning(" ".repeat(10_000)));
     }
 }
