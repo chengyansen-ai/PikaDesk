@@ -7,6 +7,7 @@ import com.sojourners.chess.linker.profile.ConnectionProfile;
 import com.sojourners.chess.linker.profile.ConnectionWizardState;
 import com.sojourners.chess.mouse.GlobalMouseListener;
 import com.sojourners.chess.mouse.MouseListenCallBack;
+import com.sojourners.chess.recognition.RecognitionResult;
 import com.sojourners.chess.util.PathUtils;
 import com.sojourners.chess.yolo.OnnxModel;
 import com.sun.jna.Memory;
@@ -19,6 +20,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class WindowsGraphLinker extends AbstractGraphLinker implements MouseListenCallBack {
@@ -261,9 +264,21 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
                             visualMove,
                             profile.clickDelayMillis(),
                             profile.moveDelayMillis(),
-                            3_000
+                            5_000
                     );
             if (!outcome.confirmed()) {
+                // ANIMATION_TIMEOUT usually means the click landed but the
+                // confirmation window missed the stable frame (slow animation,
+                // network jitter). If the board already changed since the
+                // click, treat the move as applied and let the scan loop
+                // resync from the new position instead of pausing the session.
+                if (shouldResyncOnConfirmationTimeout(
+                        outcome.confirmationStatus(),
+                        visualBoardChangedSinceClick(visualPositionBeforeMove))) {
+                    System.err.println(
+                            "confirmation missed but board already changed; resyncing");
+                    return true;
+                }
                 String detail = outcome.detail();
                 if (detail == null || detail.isBlank()) {
                     detail = "未知原因";
@@ -290,6 +305,42 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
     protected String confirmationFailureDetail() {
         return moveCoordinator != null
                 ? moveCoordinator.lastReason().orElse(null) : null;
+    }
+
+    /**
+     * Pure decision rule: a confirmation timeout may be recovered from when
+     * the board has already changed since the click (the move applied, only
+     * the confirmation missed). Other outcomes always pause.
+     */
+    static boolean shouldResyncOnConfirmationTimeout(
+            Optional<MoveConfirmationTracker.Status> confirmationStatus,
+            boolean boardChangedSinceClick) {
+        return confirmationStatus.orElse(null)
+                == MoveConfirmationTracker.Status.ANIMATION_TIMEOUT
+                && boardChangedSinceClick;
+    }
+
+    /**
+     * Reads one fresh frame and compares it against the pre-click visual
+     * position. Conservative: any recognition failure or orientation
+     * ambiguity reports "unchanged" so the session pauses instead of
+     * risking a duplicate move.
+     */
+    private boolean visualBoardChangedSinceClick(char[][] visualPositionBeforeMove) {
+        if (visualPositionBeforeMove == null) {
+            return false;
+        }
+        try {
+            RecognitionResult result = recognizeNextVisualFrame();
+            if (!result.accepted()) {
+                return false;
+            }
+            char[][] current = ObservedBoardOrientation.normalize(
+                    result.position().orElseThrow().boardCopy()).boardCopy();
+            return !Arrays.deepEquals(current, visualPositionBeforeMove);
+        } catch (RuntimeException failure) {
+            return false;
+        }
     }
 
     static BoardCoordinateMapper.BoardBounds calibrationBoardBounds(
