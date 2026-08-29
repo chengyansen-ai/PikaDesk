@@ -143,6 +143,10 @@ public final class WindowsAutomationTarget {
         try {
             return kernel.executeOne(permit -> {
                 if (!permit.send(() -> {
+                    if (!bridge.ensureForeground(handle)) {
+                        throw new IOException(
+                                "could not bring target window to foreground");
+                    }
                     ValidatedMove validated = validate(
                             kernel, mapper, calibration, activityAtReady, move);
                     if (!bridge.sendHardwareClick(
@@ -329,6 +333,12 @@ public final class WindowsAutomationTarget {
 
         /** Restores the cursor position, e.g. after a hardware click pair. */
         void moveCursorTo(int x, int y);
+
+        /**
+         * Brings the target window to the foreground without injecting input
+         * events (so user-activity validation stays unaffected).
+         */
+        boolean ensureForeground(WinDef.HWND handle);
     }
 
     @FunctionalInterface
@@ -423,6 +433,27 @@ public final class WindowsAutomationTarget {
         @Override
         public void moveCursorTo(int x, int y) {
             User32.INSTANCE.SetCursorPos(x, y);
+        }
+
+        @Override
+        public boolean ensureForeground(WinDef.HWND handle) {
+            // No keybd_event/SendInput trick: those refresh the user-input
+            // timestamp and would trip the activity validation. A process
+            // the user is currently operating holds foreground permission,
+            // so plain SetForegroundWindow + polling is reliable here.
+            for (int attempt = 0; attempt < 5; attempt++) {
+                User32.INSTANCE.SetForegroundWindow(handle);
+                try {
+                    Thread.sleep(60);
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                    return false;
+                }
+                if (sameHandle(User32.INSTANCE.GetForegroundWindow(), handle)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private boolean sameHandle(WinDef.HWND first, WinDef.HWND second) {

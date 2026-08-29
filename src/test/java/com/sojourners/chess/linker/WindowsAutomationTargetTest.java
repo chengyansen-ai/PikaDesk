@@ -182,6 +182,48 @@ final class WindowsAutomationTargetTest {
         );
     }
 
+    @Test
+    void hardwarePathBringsTargetToForegroundBeforeValidation() {
+        FakeBridge bridge = new FakeBridge();
+        bridge.window = new WindowsAutomationTarget.WindowObservation(
+                true, 42, 77, CLIENT, 144, false, true);
+        WindowsAutomationTarget target = new WindowsAutomationTarget(
+                HANDLE, bridge, millis -> { }, true);
+        AutomationSafetyKernel kernel = readyKernel(target.authorization());
+
+        boolean executed = target.executeOne(
+                kernel, new BoardCoordinateMapper(), calibration(target), QUIET,
+                new BoardCoordinateMapper.Move(0, 0, 0, 1), 0, 0);
+
+        assertAll(
+                () -> assertTrue(bridge.foregroundCalls > 0),
+                () -> assertTrue(executed),
+                () -> assertEquals(2, bridge.hardwareClicks.size()),
+                () -> assertEquals(AutomationState.CONFIRMING, kernel.state())
+        );
+    }
+
+    @Test
+    void hardwarePathPausesWhenForegroundCannotBeEstablished() {
+        FakeBridge bridge = new FakeBridge();
+        bridge.foregroundSucceeds = false;
+        WindowsAutomationTarget target = new WindowsAutomationTarget(
+                HANDLE, bridge, millis -> { }, true);
+        AutomationSafetyKernel kernel = readyKernel(target.authorization());
+
+        boolean executed = target.executeOne(
+                kernel, new BoardCoordinateMapper(), calibration(target), QUIET,
+                new BoardCoordinateMapper.Move(0, 0, 0, 1), 0, 0);
+
+        assertAll(
+                () -> assertFalse(executed),
+                () -> assertTrue(bridge.hardwareClicks.isEmpty()),
+                () -> assertEquals(AutomationState.PAUSED, kernel.state()),
+                () -> assertTrue(kernel.lastReason().orElseThrow()
+                        .contains("could not bring target window to foreground"))
+        );
+    }
+
     private boolean executeDefault(WindowsAutomationTarget target,
                                    FakeBridge bridge,
                                    AutomationSafetyKernel kernel) {
@@ -257,6 +299,19 @@ final class WindowsAutomationTargetTest {
         public void moveCursorTo(int x, int y) {
             activity = new BoardCoordinateMapper.ActivitySnapshot(
                     x, y, activity.inputSequence());
+        }
+
+        private int foregroundCalls;
+        private boolean foregroundSucceeds = true;
+
+        @Override
+        public boolean ensureForeground(WinDef.HWND handle) {
+            foregroundCalls++;
+            if (foregroundSucceeds) {
+                window = new WindowsAutomationTarget.WindowObservation(
+                        true, 42, 77, CLIENT, 144, true, true);
+            }
+            return foregroundSucceeds;
         }
     }
 }

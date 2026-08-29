@@ -325,5 +325,10 @@ final class WindowsMoveCoordinatorTest {
         @Override
         public void moveCursorTo(int x, int y) {
         }
+
+        @Override
+        public boolean ensureForeground(WinDef.HWND handle) {
+            return true;
+        }
     }
 }
