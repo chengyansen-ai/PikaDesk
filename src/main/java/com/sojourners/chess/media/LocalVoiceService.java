@@ -164,8 +164,10 @@ public final class LocalVoiceService implements AutoCloseable {
                         continue;
                     }
                     synchronized (submissionLock) {
-                        backendUnavailable.set(true);
+                        // Publish the failure type BEFORE the unavailable flag
+                        // so readers observing the flag always see the type.
                         failureType.set(safeFailureType(failure));
+                        backendUnavailable.set(true);
                         queue.clear();
                     }
                     backend = closeQuietly(backend);

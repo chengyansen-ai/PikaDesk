@@ -316,5 +316,14 @@ final class WindowsMoveCoordinatorTest {
             events.add(event);
             return true;
         }
+
+        @Override
+        public boolean sendHardwareClick(int screenX, int screenY, int clickDelayMillis) {
+            return true;
+        }
+
+        @Override
+        public void moveCursorTo(int x, int y) {
+        }
     }
 }

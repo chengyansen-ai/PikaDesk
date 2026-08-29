@@ -130,6 +130,58 @@ final class WindowsAutomationTargetTest {
         );
     }
 
+    @Test
+    void hardwarePathInjectsTwoScreenClicksAndRestoresCursor() {
+        FakeBridge bridge = new FakeBridge();
+        WindowsAutomationTarget target = new WindowsAutomationTarget(
+                HANDLE, bridge, millis -> { }, true);
+        AutomationSafetyKernel kernel = readyKernel(target.authorization());
+
+        boolean executed = target.executeOne(
+                kernel,
+                new BoardCoordinateMapper(),
+                calibration(target),
+                QUIET,
+                new BoardCoordinateMapper.Move(0, 0, 0, 1),
+                40,
+                60
+        );
+
+        assertAll(
+                () -> assertTrue(executed),
+                () -> assertEquals(AutomationState.CONFIRMING, kernel.state()),
+                () -> assertTrue(bridge.events.isEmpty()),
+                () -> assertEquals(List.of(
+                        List.of(150, 870, 40),
+                        List.of(150, 800, 40)
+                ), bridge.hardwareClicks.stream()
+                        .map(click -> List.of(click[0], click[1], click[2])).toList()),
+                () -> assertEquals(20, bridge.activity.pointerX()),
+                () -> assertEquals(30, bridge.activity.pointerY())
+        );
+    }
+
+    @Test
+    void hardwarePathPausesWhenNativeInjectionFails() {
+        FakeBridge bridge = new FakeBridge();
+        bridge.hardwareSucceeds = false;
+        WindowsAutomationTarget target = new WindowsAutomationTarget(
+                HANDLE, bridge, millis -> { }, true);
+        AutomationSafetyKernel kernel = readyKernel(target.authorization());
+
+        boolean executed = target.executeOne(
+                kernel, new BoardCoordinateMapper(), calibration(target), QUIET,
+                new BoardCoordinateMapper.Move(0, 0, 0, 1), 0, 0);
+
+        assertAll(
+                () -> assertFalse(executed),
+                () -> assertEquals(1, bridge.hardwareClicks.size()),
+                () -> assertEquals(AutomationState.PAUSED, kernel.state()),
+                () -> assertTrue(kernel.lastReason().orElseThrow()
+                        .contains("hardware click failed"))
+        );
+    }
+
     private boolean executeDefault(WindowsAutomationTarget target,
                                    FakeBridge bridge,
                                    AutomationSafetyKernel kernel) {
@@ -171,8 +223,10 @@ final class WindowsAutomationTargetTest {
                         true, 42, 77, CLIENT, 144, true, true);
         private BoardCoordinateMapper.ActivitySnapshot activity = QUIET;
         private final List<WindowsAutomationTarget.MouseEvent> events = new ArrayList<>();
+        private final List<int[]> hardwareClicks = new ArrayList<>();
         private Runnable afterSend = () -> { };
         private boolean sendSucceeds = true;
+        private boolean hardwareSucceeds = true;
 
         @Override
         public WindowsAutomationTarget.WindowObservation inspect(WinDef.HWND handle) {
@@ -190,6 +244,19 @@ final class WindowsAutomationTargetTest {
             events.add(event);
             afterSend.run();
             return sendSucceeds;
+        }
+
+        @Override
+        public boolean sendHardwareClick(int screenX, int screenY, int clickDelayMillis) {
+            hardwareClicks.add(new int[]{screenX, screenY, clickDelayMillis});
+            afterSend.run();
+            return hardwareSucceeds;
+        }
+
+        @Override
+        public void moveCursorTo(int x, int y) {
+            activity = new BoardCoordinateMapper.ActivitySnapshot(
+                    x, y, activity.inputSequence());
         }
     }
 }

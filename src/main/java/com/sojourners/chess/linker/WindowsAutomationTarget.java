@@ -30,16 +30,26 @@ public final class WindowsAutomationTarget {
     private final WinDef.HWND handle;
     private final NativeBridge bridge;
     private final Delay delay;
+    private final boolean hardwareInput;
     private final AutomationSafetyKernel.Authorization authorization;
 
     public static WindowsAutomationTarget attach(WinDef.HWND selectedHandle) {
-        return new WindowsAutomationTarget(selectedHandle, new JnaNativeBridge(), Thread::sleep);
+        return new WindowsAutomationTarget(
+                selectedHandle, new JnaNativeBridge(), Thread::sleep, true);
     }
 
     WindowsAutomationTarget(WinDef.HWND selectedHandle, NativeBridge bridge, Delay delay) {
+        this(selectedHandle, bridge, delay, false);
+    }
+
+    WindowsAutomationTarget(WinDef.HWND selectedHandle,
+                            NativeBridge bridge,
+                            Delay delay,
+                            boolean hardwareInput) {
         this.handle = requireHandle(selectedHandle);
         this.bridge = Objects.requireNonNull(bridge, "bridge");
         this.delay = Objects.requireNonNull(delay, "delay");
+        this.hardwareInput = hardwareInput;
         WindowObservation initial = Objects.requireNonNull(
                 bridge.inspect(handle), "initial window observation");
         if (!initial.valid()) {
@@ -91,6 +101,11 @@ public final class WindowsAutomationTarget {
         requireDelay(clickDelayMillis, "clickDelayMillis");
         requireDelay(moveDelayMillis, "moveDelayMillis");
 
+        if (hardwareInput) {
+            return executeHardwareOne(kernel, mapper, calibration, activityAtReady,
+                    move, clickDelayMillis, moveDelayMillis);
+        }
+
         return kernel.executeOne(permit -> {
             sendValidated(kernel, permit, mapper, calibration, activityAtReady,
                     move, true, WM_MOUSEMOVE, 0);
@@ -108,6 +123,48 @@ public final class WindowsAutomationTarget {
             sendValidated(kernel, permit, mapper, calibration, activityAtReady,
                     move, false, WM_LBUTTONUP, 0);
         });
+    }
+
+    /**
+     * Hardware-level click path for self-drawn or engine-rendered windows
+     * (game clients, CEF/Electron canvases) that do not handle synthetic
+     * window messages. Injects via SetCursorPos + mouse_event, which reaches
+     * any window; the safety kernel and per-message validation are unchanged,
+     * and the cursor is restored after the pair completes.
+     */
+    private boolean executeHardwareOne(AutomationSafetyKernel kernel,
+                                       BoardCoordinateMapper mapper,
+                                       BoardCoordinateMapper.Calibration calibration,
+                                       BoardCoordinateMapper.ActivitySnapshot activityAtReady,
+                                       BoardCoordinateMapper.Move move,
+                                       int clickDelayMillis,
+                                       int moveDelayMillis) {
+        BoardCoordinateMapper.ActivitySnapshot cursorBefore = bridge.activity();
+        try {
+            return kernel.executeOne(permit -> {
+                if (!permit.send(() -> {
+                    ValidatedMove validated = validate(
+                            kernel, mapper, calibration, activityAtReady, move);
+                    if (!bridge.sendHardwareClick(
+                            validated.points().from().x(),
+                            validated.points().from().y(),
+                            clickDelayMillis)) {
+                        throw new IOException("hardware click failed at source square");
+                    }
+                    waitOutsidePermit(moveDelayMillis);
+                    if (!bridge.sendHardwareClick(
+                            validated.points().to().x(),
+                            validated.points().to().y(),
+                            clickDelayMillis)) {
+                        throw new IOException("hardware click failed at target square");
+                    }
+                })) {
+                    throw new SequenceHalted();
+                }
+            });
+        } finally {
+            bridge.moveCursorTo(cursorBefore.pointerX(), cursorBefore.pointerY());
+        }
     }
 
     private void sendValidated(AutomationSafetyKernel kernel,
@@ -263,6 +320,15 @@ public final class WindowsAutomationTarget {
         BoardCoordinateMapper.ActivitySnapshot activity();
 
         boolean send(WinDef.HWND handle, MouseEvent event, int timeoutMillis);
+
+        /**
+         * Hardware-level click at physical screen coordinates. Reaches
+         * self-drawn/engine windows that ignore synthetic window messages.
+         */
+        boolean sendHardwareClick(int screenX, int screenY, int clickDelayMillis);
+
+        /** Restores the cursor position, e.g. after a hardware click pair. */
+        void moveCursorTo(int x, int y);
     }
 
     @FunctionalInterface
@@ -333,6 +399,30 @@ public final class WindowsAutomationTarget {
                     new WinDef.DWORDByReference()
             );
             return sent != null && sent.longValue() != 0;
+        }
+
+        @Override
+        public boolean sendHardwareClick(int screenX, int screenY, int clickDelayMillis) {
+            if (!User32.INSTANCE.SetCursorPos(screenX, screenY)) {
+                return false;
+            }
+            User32Extra.INSTANCE.mouse_event(0x0002 /* MOUSEEVENTF_LEFTDOWN */,
+                    0, 0, 0, Pointer.NULL);
+            if (clickDelayMillis > 0) {
+                try {
+                    Thread.sleep(clickDelayMillis);
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            User32Extra.INSTANCE.mouse_event(0x0004 /* MOUSEEVENTF_LEFTUP */,
+                    0, 0, 0, Pointer.NULL);
+            return true;
+        }
+
+        @Override
+        public void moveCursorTo(int x, int y) {
+            User32.INSTANCE.SetCursorPos(x, y);
         }
 
         private boolean sameHandle(WinDef.HWND first, WinDef.HWND second) {

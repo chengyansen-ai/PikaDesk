@@ -21,4 +21,11 @@ public interface User32Extra extends User32 {
 
     boolean GetCursorPos(long[] lpPoint); //use macros POINT_X() and POINT_Y() on long lpPoint[0]
     HWND WindowFromPoint(long point);
+
+    /**
+     * Hardware-level mouse event injection (reaches self-drawn/engine windows
+     * that ignore synthetic window messages). Flags: 0x0002 = LEFTDOWN,
+     * 0x0004 = LEFTUP.
+     */
+    void mouse_event(int dwFlags, int dx, int dy, int dwData, com.sun.jna.Pointer dwExtraInfo);
 }
