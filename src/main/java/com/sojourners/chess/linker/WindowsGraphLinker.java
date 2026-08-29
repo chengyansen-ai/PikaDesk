@@ -230,7 +230,11 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
                     ? BoardCoordinateMapper.Orientation.BLACK_AT_BOTTOM
                     : BoardCoordinateMapper.Orientation.RED_AT_BOTTOM;
             if (profile.orientation() != recognizedOrientation) {
-                coordinator.stop("configured orientation no longer matches recognition");
+                String observed = recognizedOrientation
+                        == BoardCoordinateMapper.Orientation.RED_AT_BOTTOM
+                        ? "红方在下" : "黑方在下";
+                coordinator.stop("方向不符：目标窗口实际是「" + observed
+                        + "」，请在连接配置里把方向改成「" + observed + "」后重新连接");
                 return false;
             }
             BoardCoordinateMapper.Calibration calibration = new BoardCoordinateMapper.Calibration(
