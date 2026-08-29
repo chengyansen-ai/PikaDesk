@@ -39,6 +39,8 @@ voiceService.announce(VoiceAnnouncement.move("炮二平五"));
 ```powershell
 $env:JAVA_HOME = 'C:\path\to\jdk-21'
 .\mvnw.cmd --batch-mode '-Dtest=LocalVoiceServiceTest,VoiceAnnouncementTest,PropertiesDefaultsTest' test
+.\mvnw.cmd --batch-mode '-Dtest=WindowsSapiVoiceAcceptanceTest' '-Dpikadesk.voice.acceptance=true' test
+.\mvnw.cmd --batch-mode '-Dtest=LocalVoicePerformanceAcceptanceTest' '-Dpikadesk.voice.performance=true' test
 .\mvnw.cmd --batch-mode verify
 .\scripts\package-windows.ps1
 ```
