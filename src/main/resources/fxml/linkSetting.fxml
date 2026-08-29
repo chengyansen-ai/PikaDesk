@@ -77,6 +77,8 @@
                   <TextField fx:id="mouseClickDelay" prefWidth="70.0" GridPane.columnIndex="5" GridPane.rowIndex="1" />
                   <Label text="走子间隔(ms，仅自动)" GridPane.columnIndex="6" GridPane.rowIndex="1" />
                   <TextField fx:id="mouseMoveDelay" prefWidth="70.0" GridPane.columnIndex="7" GridPane.rowIndex="1" />
+                  <Label text="思考延迟(ms，仅自动)" GridPane.columnIndex="8" GridPane.rowIndex="1" />
+                  <TextField fx:id="linkThinkDelay" prefWidth="70.0" GridPane.columnIndex="9" GridPane.rowIndex="1" />
                </children>
             </GridPane>
          </content>

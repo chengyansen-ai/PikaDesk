@@ -48,6 +48,7 @@ public class LinkSettingController {
     @FXML private TextField linkThreadNum;
     @FXML private TextField mouseClickDelay;
     @FXML private TextField mouseMoveDelay;
+    @FXML private TextField linkThinkDelay;
     @FXML private CheckBox localAuthorization;
     @FXML private Button dryRunButton;
     @FXML private Button completeButton;
@@ -71,6 +72,7 @@ public class LinkSettingController {
         linkThreadNum.setText(String.valueOf(prop.getLinkThreadNum()));
         mouseClickDelay.setText(String.valueOf(prop.getMouseClickDelay()));
         mouseMoveDelay.setText(String.valueOf(prop.getMouseMoveDelay()));
+        linkThinkDelay.setText(String.valueOf(prop.getLinkThinkDelay()));
         watchVerifiedField(profileName);
         watchVerifiedField(boardX);
         watchVerifiedField(boardY);
@@ -80,6 +82,7 @@ public class LinkSettingController {
         watchVerifiedField(linkThreadNum);
         watchVerifiedField(mouseClickDelay);
         watchVerifiedField(mouseMoveDelay);
+        watchVerifiedField(linkThinkDelay);
         orientation.valueProperty().addListener((observable, oldValue, newValue) -> markDirty());
         themeId.valueProperty().addListener((observable, oldValue, newValue) -> markDirty());
         modelId.valueProperty().addListener((observable, oldValue, newValue) -> markDirty());
@@ -385,14 +388,17 @@ public class LinkSettingController {
         int threads = number(linkThreadNum, "识别线程");
         int click = number(mouseClickDelay, "点击间隔");
         int move = number(mouseMoveDelay, "走子间隔");
+        int think = number(linkThinkDelay, "思考延迟");
         if (scan < 20 || scan > 10_000 || threads < 1 || threads > 64
-                || click < 0 || click > 2_000 || move < 0 || move > 2_000) {
+                || click < 0 || click > 2_000 || move < 0 || move > 2_000
+                || think < 0 || think > 5_000) {
             throw new IllegalArgumentException("参数超出安全范围");
         }
         prop.setLinkScanTime(scan);
         prop.setLinkThreadNum(threads);
         prop.setMouseClickDelay(click);
         prop.setMouseMoveDelay(move);
+        prop.setLinkThinkDelay(think);
     }
 
     private BoardCoordinateMapper.Orientation selectedOrientation() {

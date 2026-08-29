@@ -229,6 +229,7 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
             return false;
         }
         try {
+            thinkBeforeMove();
             BoardCoordinateMapper.Orientation recognizedOrientation = reversed
                     ? BoardCoordinateMapper.Orientation.BLACK_AT_BOTTOM
                     : BoardCoordinateMapper.Orientation.RED_AT_BOTTOM;
@@ -305,6 +306,22 @@ public class WindowsGraphLinker extends AbstractGraphLinker implements MouseList
     protected String confirmationFailureDetail() {
         return moveCoordinator != null
                 ? moveCoordinator.lastReason().orElse(null) : null;
+    }
+
+    /**
+     * Pauses before each automated move to mimic human thinking time.
+     * Bounded 0-5000 ms from user settings; interruption resumes immediately.
+     */
+    private void thinkBeforeMove() {
+        long thinkDelay = Properties.getInstance().getLinkThinkDelay();
+        if (thinkDelay <= 0) {
+            return;
+        }
+        try {
+            Thread.sleep(Math.min(thinkDelay, 5_000));
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     /**

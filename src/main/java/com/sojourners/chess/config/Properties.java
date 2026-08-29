@@ -92,6 +92,9 @@ public class Properties implements Serializable {
 
     private int mouseClickDelay = 2;
     private int mouseMoveDelay = 0;
+
+    /** Pause before each automated move, mimicking human thinking time. */
+    private int linkThinkDelay = 600;
     /*
      * 显示棋谱管理
      */
@@ -280,6 +283,14 @@ public class Properties implements Serializable {
 
     public void setMouseMoveDelay(int mouseMoveDelay) {
         this.mouseMoveDelay = mouseMoveDelay;
+    }
+
+    public int getLinkThinkDelay() {
+        return linkThinkDelay;
+    }
+
+    public void setLinkThinkDelay(int linkThinkDelay) {
+        this.linkThinkDelay = linkThinkDelay;
     }
 
     public List<String> getOpenBookList() {
