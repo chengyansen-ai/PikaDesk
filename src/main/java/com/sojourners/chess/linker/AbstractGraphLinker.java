@@ -497,10 +497,28 @@ public abstract class AbstractGraphLinker implements GraphLinker, Runnable {
     private boolean findChessBoard(char[][] board) {
         RecognitionResult result = recognizeNextVisualFrame();
         if (!result.accepted()) {
+            publishRecognitionFailure(result);
             return false;
         }
         copyBoard(result.position().orElseThrow().boardCopy(), board);
         return true;
+    }
+
+    /**
+     * Surfaces the recognition rejection reason in the connection status so a
+     * silent "connected but never moves" state becomes diagnosable. The
+     * publish layer deduplicates identical messages, so a persistent failure
+     * is reported once instead of spamming every scan tick.
+     */
+    private void publishRecognitionFailure(RecognitionResult result) {
+        if (result == null) {
+            return;
+        }
+        String detail = result.rejection()
+                .map(rejection -> rejection.reason() + "：" + rejection.detail())
+                .orElse("未知原因");
+        publishConnectionStatus(ConnectionStatus.State.PAUSED,
+                "识别未通过（" + detail + "）");
     }
     private boolean reverse(char[][] board) throws Exception {
         ObservedBoardOrientation.Position position =
